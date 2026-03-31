@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Bowl Trainer - IHBB Middle School</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --accent: #e94560;
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
+    --green: #00c853;
+    --blue: #448aff;
+    --text: #eee;
+    --dim: #888;
+    --radius: 14px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Top Bar ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #16213e, #1a1a2e);
+    border-bottom: 2px solid var(--accent);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar h1 { font-size: 1.3rem; }
+  .topbar h1 span { color: var(--accent); }
+  .score-display {
+    display: flex; gap: 18px; align-items: center; font-size: 0.95rem;
+  }
+  .score-display .val { color: var(--gold); font-weight: 700; }
+
+  /* ── Menu ── */
+  .menu-screen {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: calc(100vh - 60px);
+    padding: 30px;
+  }
+  .menu-screen h2 {
+    font-size: 2.2rem; margin-bottom: 8px;
+    background: linear-gradient(90deg, var(--gold), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .menu-screen .sub { color: var(--dim); margin-bottom: 40px; font-size: 1.05rem; }
+  .mode-cards { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+  .mode-card {
+    width: 260px; background: var(--card); border-radius: var(--radius);
+    padding: 28px 22px; cursor: pointer; border: 2px solid transparent;
+    transition: all 0.3s; text-align: center;
+  }
+  .mode-card:hover { border-color: var(--accent); transform: translateY(-6px); box-shadow: 0 8px 30px rgba(233,69,96,0.25); }
+  .mode-card .icon { font-size: 3rem; margin-bottom: 14px; }
+  .mode-card h3 { font-size: 1.15rem; margin-bottom: 8px; color: var(--gold); }
+  .mode-card p { font-size: 0.85rem; color: var(--dim); line-height: 1.5; }
+
+  /* ── Shared game area ── */
+  .game-area {
+    display: none; flex-direction: column; align-items: center;
+    padding: 24px; min-height: calc(100vh - 60px);
+  }
+  .game-area.active { display: flex; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 12px 28px; border: none; border-radius: 8px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; color: #fff;
+  }
+  .btn-primary { background: var(--accent); }
+  .btn-primary:hover { background: #c5304a; transform: scale(1.03); }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-green:hover { background: #00a844; }
+  .btn-blue { background: var(--blue); }
+  .btn-blue:hover { background: #2979ff; }
+  .btn-outline {
+    background: transparent; border: 2px solid var(--dim); color: var(--dim);
+  }
+  .btn-outline:hover { border-color: var(--text); color: var(--text); }
+  .btn-small { padding: 8px 16px; font-size: 0.85rem; }
+
+  /* ═══════════════════════════════════════
+     MODE 1: BUZZER QUIZ RACE
+     ═══════════════════════════════════════ */
+  .buzzer-container { width: 100%; max-width: 750px; }
+  .buzzer-progress {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; font-size: 0.9rem; color: var(--dim);
+  }
+  .buzzer-progress .qnum { color: var(--gold); font-weight: 700; font-size: 1.1rem; }
+  .hint-box {
+    background: var(--card); border-radius: var(--radius); padding: 28px;
+    min-height: 160px; margin-bottom: 20px; position: relative;
+    border-left: 4px solid var(--accent);
+  }
+  .hint-label {
+    position: absolute; top: -12px; left: 16px;
+    background: var(--accent); color: #fff; padding: 2px 14px;
+    border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+  }
+  .hint-text { font-size: 1.15rem; line-height: 1.7; margin-top: 8px; }
+  .hint-points {
+    text-align: center; margin: 6px 0 16px;
+    font-size: 1.3rem; font-weight: 700;
+  }
+  .hint-points .pts { color: var(--gold); }
+  .hint-steps {
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 18px;
+  }
+  .hint-step {
+    width: 42px; height: 6px; border-radius: 3px; background: #333;
+    transition: background 0.3s;
+  }
+  .hint-step.active { background: var(--accent); }
+  .hint-step.revealed { background: var(--gold); }
+  .buzzer-actions {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  }
+  .answer-input-row {
+    display: none; flex-direction: column; align-items: center; gap: 12px;
+    margin-top: 16px; width: 100%;
+  }
+  .answer-input-row.show { display: flex; }
+  .answer-input {
+    width: 100%; max-width: 400px; padding: 14px 18px; border-radius: 10px;
+    border: 2px solid #333; background: #111; color: #fff;
+    font-size: 1.1rem; text-align: center; outline: none;
+  }
+  .answer-input:focus { border-color: var(--accent); }
+  .result-banner {
+    display: none; text-align: center; padding: 18px; border-radius: var(--radius);
+    margin-top: 14px; font-size: 1.05rem;
+  }
+  .result-banner.correct { display: block; background: rgba(0,200,83,0.15); border: 1px solid var(--green); }
+  .result-banner.wrong { display: block; background: rgba(233,69,96,0.15); border: 1px solid var(--accent); }
+  .result-banner .answer-reveal { font-weight: 700; color: var(--gold); font-size: 1.2rem; }
+
+  /* Timer bar */
+  .timer-bar-wrapper {
+    width: 100%; max-width: 750px; height: 6px; background: #222;
+    border-radius: 3px; margin-bottom: 8px; overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%; background: var(--green); transition: width 0.1s linear;
+    border-radius: 3px;
+  }
+  .timer-bar.warning { background: var(--gold); }
+  .timer-bar.danger { background: var(--accent); }
+
+  /* ═══════════════════════════════════════
+     MODE 2: MAP CONQUEST
+     ═══════════════════════════════════════ */
+  .map-container { width: 100%; max-width: 900px; }
+  .map-stats {
+    display: flex; gap: 24px; justify-content: center; margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .map-stat {
+    background: var(--card); padding: 10px 20px; border-radius: 10px;
+    text-align: center; min-width: 100px;
+  }
+  .map-stat .label { font-size: 0.75rem; color: var(--dim); }
+  .map-stat .val { font-size: 1.3rem; font-weight: 700; }
+  .map-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .map-tile {
+    background: var(--card); border: 2px solid #333; border-radius: 10px;
+    padding: 14px 10px; text-align: center; cursor: pointer;
+    transition: all 0.3s; position: relative;
+  }
+  .map-tile:hover { border-color: var(--blue); transform: scale(1.04); }
+  .map-tile .region-icon { font-size: 1.8rem; margin-bottom: 4px; }
+  .map-tile .region-name { font-size: 0.8rem; font-weight: 600; }
+  .map-tile.conquered { border-color: var(--green); background: rgba(0,200,83,0.1); }
+  .map-tile.conquered::after {
+    content: '\u2714'; position: absolute; top: 4px; right: 8px;
+    color: var(--green); font-size: 1.2rem;
+  }
+  .map-tile.failed { border-color: var(--accent); opacity: 0.5; pointer-events: none; }
+
+  /* Map modal */
+  .map-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    z-index: 200; align-items: center; justify-content: center; padding: 20px;
+  }
+  .map-modal-overlay.show { display: flex; }
+  .map-modal {
+    background: var(--card); border-radius: var(--radius); padding: 30px;
+    max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;
+  }
+  .map-modal h3 { color: var(--gold); margin-bottom: 16px; font-size: 1.2rem; }
+  .map-modal .question-text { line-height: 1.7; margin-bottom: 20px; font-size: 1.05rem; }
+  .map-choices { display: flex; flex-direction: column; gap: 10px; }
+  .map-choice {
+    padding: 14px 18px; background: #111; border: 2px solid #333;
+    border-radius: 10px; cursor: pointer; font-size: 1rem;
+    transition: all 0.2s; text-align: left;
+  }
+  .map-choice:hover { border-color: var(--blue); background: rgba(68,138,255,0.08); }
+  .map-choice.correct-choice { border-color: var(--green) !important; background: rgba(0,200,83,0.15) !important; }
+  .map-choice.wrong-choice { border-color: var(--accent) !important; background: rgba(233,69,96,0.15) !important; }
+  .map-choice.disabled { pointer-events: none; }
+  .map-fact {
+    display: none; margin-top: 16px; padding: 14px; background: rgba(255,215,0,0.08);
+    border-radius: 10px; border-left: 3px solid var(--gold);
+    font-size: 0.9rem; line-height: 1.5;
+  }
+  .map-fact.show { display: block; }
+
+  /* ═══════════════════════════════════════
+     MODE 3: HISTORY FIGURE INTERVIEW
+     ═══════════════════════════════════════ */
+  .interview-container { width: 100%; max-width: 650px; }
+  .interview-figure {
+    text-align: center; margin-bottom: 20px;
+  }
+  .interview-figure .silhouette {
+    font-size: 5rem; opacity: 0.6;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 0.5; }
+    50% { opacity: 0.9; }
+  }
+  .interview-figure .mystery { color: var(--dim); font-size: 0.9rem; margin-top: 4px; }
+  .chat-area {
+    background: var(--card); border-radius: var(--radius);
+    padding: 20px; min-height: 300px; max-height: 50vh;
+    overflow-y: auto; margin-bottom: 16px;
+  }
+  .chat-msg {
+    margin-bottom: 14px; display: flex; gap: 10px;
+    animation: fadeIn 0.3s;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .chat-msg.figure .avatar {
+    width: 36px; height: 36px; background: var(--accent); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .chat-msg.player .avatar {
+    width: 36px; height: 36px; background: var(--blue); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .chat-bubble {
+    background: #111; padding: 10px 16px; border-radius: 12px;
+    max-width: 85%; line-height: 1.5; font-size: 0.95rem;
+  }
+  .interview-clues {
+    display: flex; gap: 6px; justify-content: center; margin-bottom: 14px;
+  }
+  .clue-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #333; border: 2px solid #555;
+  }
+  .clue-dot.used { background: var(--accent); border-color: var(--accent); }
+  .interview-actions {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  }
+  .guess-row {
+    display: none; flex-direction: column; align-items: center;
+    gap: 10px; margin-top: 12px; width: 100%;
+  }
+  .guess-row.show { display: flex; }
+
+  /* ── Summary / Score Screen ── */
+  .summary-screen {
+    text-align: center; padding: 40px 20px;
+  }
+  .summary-screen h2 { font-size: 2rem; margin-bottom: 8px; }
+  .summary-screen .final-score { font-size: 3.5rem; color: var(--gold); font-weight: 800; margin: 20px 0; }
+  .summary-screen .grade { font-size: 1.2rem; margin-bottom: 30px; }
+  .review-list {
+    text-align: left; max-width: 600px; margin: 0 auto 30px;
+  }
+  .review-item {
+    background: var(--card); padding: 14px 18px; border-radius: 10px;
+    margin-bottom: 8px; border-left: 4px solid var(--green);
+  }
+  .review-item.missed { border-left-color: var(--accent); }
+  .review-item .q { font-size: 0.85rem; color: var(--dim); margin-bottom: 4px; }
+  .review-item .a { font-weight: 700; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .mode-cards { flex-direction: column; align-items: center; }
+    .menu-screen h2 { font-size: 1.6rem; }
+    .hint-text { font-size: 1rem; }
+    .map-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); }
+  }
+
+  /* Study Mode */
+  .study-toggle {
+    margin-bottom: 20px; display: flex; gap: 12px; align-items: center;
+    justify-content: center;
+  }
+  .study-toggle label { color: var(--dim); font-size: 0.9rem; }
+  .toggle-switch {
+    position: relative; width: 48px; height: 26px;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: #333; border-radius: 13px;
+    cursor: pointer; transition: 0.3s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute; width: 20px; height: 20px;
+    border-radius: 50%; background: #fff; left: 3px; top: 3px;
+    transition: 0.3s;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: var(--green); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+  /* Streak */
+  .streak-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,215,0,0.12); padding: 4px 14px;
+    border-radius: 20px; font-size: 0.85rem; color: var(--gold);
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <h1><span>HISTORY</span> BOWL Trainer</h1>
+  <div class="score-display">
+    <span class="streak-badge" id="streakBadge" style="display:none">&#x1F525; <span id="streakCount">0</span></span>
+    <span>Total: <span class="val" id="totalScore">0</span></span>
+  </div>
+</div>
+
+<!-- ====== MENU SCREEN ====== -->
+<div class="menu-screen" id="menuScreen">
+  <h2>IHBB History Bowl Trainer</h2>
+  <p class="sub">3 game modes to master History Bowl questions</p>
+  <div class="mode-cards">
+    <div class="mode-card" onclick="startMode('buzzer')">
+      <div class="icon">&#x1F514;</div>
+      <h3>Buzzer Quiz Race</h3>
+      <p>5-level progressive hints. Answer early for max points! The harder the clue, the more you score.</p>
+    </div>
+    <div class="mode-card" onclick="startMode('map')">
+      <div class="icon">&#x1F5FA;</div>
+      <h3>History Map Conquest</h3>
+      <p>Conquer regions by answering questions. Expand your territory across the world!</p>
+    </div>
+    <div class="mode-card" onclick="startMode('interview')">
+      <div class="icon">&#x1F3AD;</div>
+      <h3>Mystery Figure Interview</h3>
+      <p>Ask clues to a mystery historical figure. Can you guess who they are?</p>
+    </div>
+  </div>
+  <div style="margin-top:40px; color:var(--dim); font-size:0.85rem;">
+    IHBB Alpha Set 2017-2018 &middot; Middle School Bee Round 2 &middot; 26 Questions
+  </div>
+</div>
+
+<!-- ====== MODE 1: BUZZER ====== -->
+<div class="game-area" id="buzzerArea">
+  <div class="buzzer-container">
+    <div class="study-toggle">
+      <label>Timed Mode</label>
+      <div class="toggle-switch">
+        <input type="checkbox" id="timedToggle" checked>
+        <span class="toggle-slider"></span>
+      </div>
+    </div>
+    <div class="buzzer-progress">
+      <span class="qnum" id="buzzerQNum">Q1 / 26</span>
+      <span>Score: <strong id="buzzerScore">0</strong></span>
+    </div>
+    <div class="timer-bar-wrapper">
+      <div class="timer-bar" id="timerBar" style="width:100%"></div>
+    </div>
+    <div class="hint-steps" id="hintSteps"></div>
+    <div class="hint-box">
+      <span class="hint-label" id="hintLabel">Hint 1 / 5</span>
+      <div class="hint-text" id="hintText"></div>
+    </div>
+    <div class="hint-points">
+      Points available: <span class="pts" id="hintPoints">100</span>
+    </div>
+    <div class="buzzer-actions" id="buzzerActions">
+      <button class="btn btn-primary" onclick="buzzerBuzz()">&#x1F514; BUZZ IN!</button>
+      <button class="btn btn-outline" onclick="buzzerNextHint()">Next Hint &#x27A1;</button>
+    </div>
+    <div class="answer-input-row" id="buzzerInputRow">
+      <input class="answer-input" id="buzzerInput" placeholder="Type your answer..."
+             onkeydown="if(event.key==='Enter')buzzerSubmit()">
+      <button class="btn btn-green" onclick="buzzerSubmit()">Submit Answer</button>
+    </div>
+    <div class="result-banner" id="buzzerResult"></div>
+    <div style="margin-top:20px; text-align:center;">
+      <button class="btn btn-outline btn-small" onclick="backToMenu()" style="margin-right:8px">&#x2190; Menu</button>
+      <button class="btn btn-blue btn-small" id="buzzerNextBtn" style="display:none" onclick="buzzerNextQ()">Next Question &#x27A1;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODE 2: MAP ====== -->
+<div class="game-area" id="mapArea">
+  <div class="map-container">
+    <div class="map-stats">
+      <div class="map-stat"><div class="label">Conquered</div><div class="val" id="mapConquered">0</div></div>
+      <div class="map-stat"><div class="label">Regions</div><div class="val" id="mapTotal">0</div></div>
+      <div class="map-stat"><div class="label">Score</div><div class="val" id="mapScore">0</div></div>
+    </div>
+    <div class="map-grid" id="mapGrid"></div>
+    <div style="text-align:center;">
+      <button class="btn btn-outline btn-small" onclick="backToMenu()">&#x2190; Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Map question modal -->
+<div class="map-modal-overlay" id="mapModal">
+  <div class="map-modal">
+    <h3 id="mapModalRegion"></h3>
+    <div class="question-text" id="mapModalQ"></div>
+    <div class="map-choices" id="mapChoices"></div>
+    <div class="map-fact" id="mapFact"></div>
+    <div style="text-align:center; margin-top:16px;">
+      <button class="btn btn-blue btn-small" id="mapModalNext" style="display:none" onclick="closeMapModal()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODE 3: INTERVIEW ====== -->
+<div class="game-area" id="interviewArea">
+  <div class="interview-container">
+    <div class="interview-figure">
+      <div class="silhouette">&#x1F464;</div>
+      <div class="mystery" id="interviewMystery">Who am I? Ask clues to find out!</div>
+    </div>
+    <div class="interview-clues" id="interviewClues"></div>
+    <div class="chat-area" id="chatArea"></div>
+    <div class="interview-actions" id="interviewActions">
+      <button class="btn btn-blue" onclick="askClue()">&#x1F50D; Ask for a Clue</button>
+      <button class="btn btn-primary" onclick="showGuessRow()">&#x1F3AF; I Know Who It Is!</button>
+    </div>
+    <div class="guess-row" id="guessRow">
+      <input class="answer-input" id="guessInput" placeholder="Type the person/thing/place..."
+             onkeydown="if(event.key==='Enter')submitGuess()">
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-green" onclick="submitGuess()">Guess!</button>
+        <button class="btn btn-outline btn-small" onclick="hideGuessRow()">Cancel</button>
+      </div>
+    </div>
+    <div class="result-banner" id="interviewResult"></div>
+    <div style="margin-top:20px; text-align:center;">
+      <button class="btn btn-outline btn-small" onclick="backToMenu()" style="margin-right:8px">&#x2190; Menu</button>
+      <button class="btn btn-blue btn-small" id="interviewNextBtn" style="display:none" onclick="interviewNextQ()">Next Figure &#x27A1;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SUMMARY ====== -->
+<div class="game-area" id="summaryArea">
+  <div class="summary-screen">
+    <h2 id="summaryTitle">Round Complete!</h2>
+    <div class="final-score" id="summaryScore">0</div>
+    <div class="grade" id="summaryGrade"></div>
+    <div class="review-list" id="reviewList"></div>
+    <button class="btn btn-primary" onclick="backToMenu()">Back to Menu</button>
+    <button class="btn btn-blue" onclick="retryMode()" style="margin-left:10px">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// QUESTION DATABASE (from IHBB Alpha Bee 2017-2018)
+// ═══════════════════════════════════════════════
+const questions = [
+  {
+    id:1, answer:"Leningrad", accept:["leningrad","st. petersburg","st petersburg","petrograd","saint petersburg"],
+    region:"Russia", icon:"\u{1F1F7}\u{1F1FA}", category:"WWII",
+    hints:[
+      "The siege of this city was lifted by a corridor over neighboring Lake Ladoga.",
+      "It was the target of Army Group North during Operation Barbarossa.",
+      "This city was renamed in 1914, 1924, and 1991.",
+      "It is a former capital of Russia.",
+      "This city was besieged by Nazi Germany for over two years."
+    ],
+    fullQ:"The siege of this city was lifted by a corridor over neighboring Lake Ladoga, and was the target of Army Group North during Operation Barbarossa. This city was renamed in 1914, 1924, and 1991. Name this former capital of Russia besieged by Nazi Germany for over two years.",
+    wrongChoices:["Moscow","Stalingrad","Kiev"],
+    funFact:"The Siege of Leningrad lasted 872 days (1941-1944), one of the longest and most destructive sieges in history."
+  },
+  {
+    id:2, answer:"Qing Dynasty", accept:["qing","qing dynasty","manchu dynasty","ch'ing"],
+    region:"China", icon:"\u{1F1E8}\u{1F1F3}", category:"Asian History",
+    hints:[
+      "This dynasty's founder, Nurhaci, created the Eight Banners Army.",
+      "Its Kangxi Emperor welcomed Jesuit missionaries a century after its founding.",
+      "It was founded by Manchu invaders.",
+      "It replaced the Ming Dynasty.",
+      "It was China's last imperial dynasty."
+    ],
+    fullQ:"This dynasty's founder, Nurhaci, created the Eight Banners Army. Its Kangxi Emperor welcomed Jesuit missionaries. Name this Chinese dynasty founded by Manchu invaders after the fall of the Ming.",
+    wrongChoices:["Ming Dynasty","Tang Dynasty","Han Dynasty"],
+    funFact:"The Qing Dynasty lasted from 1644 to 1912 and was the last imperial dynasty of China."
+  },
+  {
+    id:3, answer:"Laos", accept:["laos"],
+    region:"Southeast Asia", icon:"\u{1F1F1}\u{1F1E6}", category:"Cold War",
+    hints:[
+      "This country's Plain of Jars was significantly bombed during the 1960s.",
+      "This country's Hmong people have often been oppressed.",
+      "Its city of Luang Prabang is a budget tourist hub.",
+      "During the Vietnam War, it was the primary site of the Ho Chi Minh trail.",
+      "Its capital is Vientiane."
+    ],
+    fullQ:"This country's Plain of Jars was bombed during the 1960s. Its Hmong people have been oppressed, and Luang Prabang is a tourist hub. Name this country with the Ho Chi Minh trail, capital Vientiane.",
+    wrongChoices:["Cambodia","Vietnam","Myanmar"],
+    funFact:"Laos is the most heavily bombed country per capita in history, with over 2 million tons of ordnance dropped during the Vietnam War era."
+  },
+  {
+    id:4, answer:"Incan Empire", accept:["inca","incan","incan empire","inca empire"],
+    region:"South America", icon:"\u{1F1F5}\u{1F1EA}", category:"Ancient Americas",
+    hints:[
+      "Manco Yupanqui founded a breakaway state of this empire in Vilcabamba.",
+      "A civil war in this empire ended with the defeat of Atahualpa, half-brother of Huascar.",
+      "The siege of Cuzco was fought against this empire.",
+      "This was a great Peruvian empire.",
+      "It was conquered by the Spanish under Francisco Pizarro."
+    ],
+    fullQ:"Manco Yupanqui founded a breakaway state. Atahualpa lost a civil war. The siege of Cuzco was fought against this Peruvian empire conquered by Pizarro.",
+    wrongChoices:["Aztec Empire","Maya Civilization","Olmec Civilization"],
+    funFact:"The Inca Empire was the largest empire in pre-Columbian America, stretching 2,500 miles along the Andes."
+  },
+  {
+    id:5, answer:"Hong Kong", accept:["hong kong"],
+    region:"East Asia", icon:"\u{1F1ED}\u{1F1F0}", category:"Modern History",
+    hints:[
+      "In this city, triads populated a once-walled city built in the Kowloon peninsula.",
+      "It features the I.M. Pei designed Bank of China Building in its Central district.",
+      "Reclamation projects have reduced the size of Victoria Harbor here.",
+      "It is a special administrative region.",
+      "It was given to China from Britain in 1997."
+    ],
+    fullQ:"Triads populated Kowloon's walled city. It features the I.M. Pei Bank of China Building. Name this special administrative region given to China from Britain in 1997.",
+    wrongChoices:["Macau","Singapore","Shanghai"],
+    funFact:"The Kowloon Walled City was the densest place on Earth before demolition in 1994, with 33,000 people in 6.4 acres."
+  },
+  {
+    id:6, answer:"Pablo Escobar", accept:["pablo escobar","escobar"],
+    region:"Colombia", icon:"\u{1F1E8}\u{1F1F4}", category:"Modern History",
+    hints:[
+      "One of this man's former hitmen claims he was urged to assassinate presidential candidate Luis Galan.",
+      "After escaping his private prison La Catedral, this man was hunted by the Search Bloc.",
+      "He died in a 1993 shootout.",
+      "He was a Colombian drug lord.",
+      "He was the leader of the Medellin Cartel."
+    ],
+    fullQ:"Urged to assassinate Luis Galan, he escaped La Catedral prison. Hunted by the Search Bloc, he died in a 1993 shootout. Name this leader of the Medellin Cartel.",
+    wrongChoices:["El Chapo","Carlos Lehder","Manuel Noriega"],
+    funFact:"At his peak, Escobar supplied 80% of the cocaine in the US and was worth an estimated $30 billion."
+  },
+  {
+    id:7, answer:"Cotton", accept:["cotton"],
+    region:"United States", icon:"\u{1F1FA}\u{1F1F8}", category:"American History",
+    hints:[
+      "A famine of this commodity in Lancashire, England, was caused by decreased American exports.",
+      "It names the type of diplomacy used by the Confederacy to appeal to European powers.",
+      "It was nicknamed 'King' due to its importance to the American south.",
+      "It is a textile crop.",
+      "It is processed by an Eli Whitney-invented 'gin'."
+    ],
+    fullQ:"A Lancashire famine was caused by decreased exports of this. The Confederacy used its name for diplomacy. Name this 'King' textile crop processed by Eli Whitney's gin.",
+    wrongChoices:["Tobacco","Sugar","Indigo"],
+    funFact:"'King Cotton' diplomacy failed because Britain had stockpiled cotton and found alternative sources in Egypt and India."
+  },
+  {
+    id:8, answer:"Romania", accept:["romania"],
+    region:"Eastern Europe", icon:"\u{1F1F7}\u{1F1F4}", category:"Cold War",
+    hints:[
+      "A fascist party in this country, the Iron Guard, was suppressed by Ion Antonescu.",
+      "Antonescu was executed for war crimes after World War II.",
+      "The last Communist ruler of this country was executed with his wife Elena on live TV.",
+      "This execution happened on Christmas Day, 1989.",
+      "Dictator Nicolae Ceausescu ruled from Bucharest."
+    ],
+    fullQ:"The Iron Guard was suppressed by Antonescu. The last Communist ruler was executed with wife Elena on Christmas 1989. Name this country where Ceausescu ruled from Bucharest.",
+    wrongChoices:["Bulgaria","Hungary","Yugoslavia"],
+    funFact:"Ceausescu and his wife Elena were executed just 3 days after being overthrown in the Romanian Revolution."
+  },
+  {
+    id:9, answer:"Ballet", accept:["ballet","dance","dancing"],
+    region:"France", icon:"\u{1F1EB}\u{1F1F7}", category:"Arts & Culture",
+    hints:[
+      "One example of this performance caused a riot at its premier in Paris in 1913: The Rite of Spring.",
+      "Tchaikovsky created a popular type of this which features the Mouse King and Clara.",
+      "This Tchaikovsky work is often performed in December.",
+      "Swan Lake is a famous example of this art form.",
+      "The Nutcracker is another famous example."
+    ],
+    fullQ:"The Rite of Spring caused a riot in 1913. Tchaikovsky created works featuring Clara and the Mouse King. Name this art form of which Swan Lake and The Nutcracker are examples.",
+    wrongChoices:["Opera","Theater","Symphony"],
+    funFact:"The premiere of The Rite of Spring in 1913 caused such a violent audience reaction that police had to be called!"
+  },
+  {
+    id:10, answer:"Crimean Peninsula", accept:["crimea","crimean","crimean peninsula","kerch peninsula"],
+    region:"Black Sea", icon:"\u{1F3F0}", category:"19th Century",
+    hints:[
+      "In a conflict here, the 93rd Highlanders became honored as the Thin Red Line.",
+      "Lord Raglan launched a courageous assault upon a Russian battery during the siege of Sevastopol.",
+      "The Charge of the Light Brigade took place here.",
+      "This is a Russian peninsula in the Black Sea.",
+      "It was the subject of a war in the 1850s."
+    ],
+    fullQ:"The 93rd Highlanders became the Thin Red Line here. Lord Raglan besieged Sevastopol. Name this Russian peninsula in the Black Sea, site of the Charge of the Light Brigade.",
+    wrongChoices:["Balkans","Gallipoli","Anatolia"],
+    funFact:"The Charge of the Light Brigade was a disastrous cavalry charge due to a miscommunicated order, immortalized in Tennyson's poem."
+  },
+  {
+    id:11, answer:"Singapore", accept:["singapore"],
+    region:"Southeast Asia", icon:"\u{1F1F8}\u{1F1EC}", category:"Modern History",
+    hints:[
+      "This country is the only one to unwillingly gain its independence.",
+      "Its first prime minister, Lee Kuan Yew, cried on television.",
+      "It was expelled from Malaysia.",
+      "It is a city-state.",
+      "It sits on the southern tip of the Malay Peninsula."
+    ],
+    fullQ:"The only country to unwillingly gain independence, its PM Lee Kuan Yew cried on TV after being expelled from Malaysia. Name this city-state on the Malay Peninsula.",
+    wrongChoices:["Malaysia","Brunei","Indonesia"],
+    funFact:"Despite being expelled from Malaysia in 1965, Singapore became one of the world's wealthiest nations per capita."
+  },
+  {
+    id:12, answer:"Gold", accept:["gold"],
+    region:"North America", icon:"\u{1F947}", category:"American History",
+    hints:[
+      "This material names a type of cross in an 1896 speech by William Jennings Bryan.",
+      "It sparked a mass migration to the Klondike region of Canada.",
+      "Many miners froze to death seeking it.",
+      "It is a precious metal.",
+      "It forms the prize given to winning athletes at the Olympics."
+    ],
+    fullQ:"Bryan's 'Cross of' this. A Klondike rush for it killed many miners. Name this precious metal, the Olympic prize for winners.",
+    wrongChoices:["Silver","Copper","Iron"],
+    funFact:"Bryan's 'Cross of Gold' speech is considered one of the greatest political speeches in American history."
+  },
+  {
+    id:13, answer:"Sudan", accept:["sudan","south sudan"],
+    region:"Africa", icon:"\u{1F1F8}\u{1F1E9}", category:"Ancient & Modern Africa",
+    hints:[
+      "In what is today this country, Piye and Kashta were rulers of the ancient Kingdom of Kush.",
+      "It is home to the southern reaches of ancient Nubia.",
+      "Sulaymon Solong founded the Sultanate of Darfur here.",
+      "It is an African country.",
+      "Its southern territory became independent in 2011."
+    ],
+    fullQ:"Piye and Kashta ruled Kush here. Home to Nubia and Darfur. Name this African country whose south became independent in 2011.",
+    wrongChoices:["Ethiopia","Egypt","Chad"],
+    funFact:"South Sudan became the world's newest country on July 9, 2011, after decades of civil war."
+  },
+  {
+    id:14, answer:"Tennis", accept:["tennis","jeu de paume"],
+    region:"France", icon:"\u{1F3BE}", category:"Sports & Revolution",
+    hints:[
+      "The father of King George III was possibly killed by a ball used for this sport.",
+      "In 1789, members of the National Assembly took an oath in a venue for this sport.",
+      "Jeu de paume was a racquet-less precursor to this sport.",
+      "Roger Federer plays this professionally.",
+      "Serena Williams is also famous for this sport."
+    ],
+    fullQ:"George III's father was possibly killed by a ball for this. The Tennis Court Oath was in a venue for this. Name this sport of Federer and Serena Williams.",
+    wrongChoices:["Cricket","Badminton","Squash"],
+    funFact:"The Tennis Court Oath (1789) was a pivotal moment in the French Revolution, where the Third Estate swore not to separate until they had a constitution."
+  },
+  {
+    id:15, answer:"Declaration of Independence", accept:["declaration of independence","us declaration of independence"],
+    region:"United States", icon:"\u{1F4DC}", category:"American Revolution",
+    hints:[
+      "This document ends with a mutual 'pledge to each other' of 'our Lives, our Fortunes, and our sacred Honor.'",
+      "It condemned a ruler for 'imposing Taxes on us without our Consent.'",
+      "It lists numerous 'repeated injuries and usurpations' by the King.",
+      "John Hancock affixed an oversized signature to it.",
+      "This founding American document was approved on July 4, 1776."
+    ],
+    fullQ:"It pledges 'Lives, Fortunes, and sacred Honor' and condemns taxation without consent. John Hancock signed it large. Name this document approved July 4, 1776.",
+    wrongChoices:["US Constitution","Bill of Rights","Magna Carta"],
+    funFact:"John Hancock's signature was so large that his name became a synonym for 'signature' in American English."
+  },
+  {
+    id:16, answer:"Germany", accept:["germany","deutschland","german empire","nazi germany"],
+    region:"Central Europe", icon:"\u{1F1E9}\u{1F1EA}", category:"Art & Archaeology",
+    hints:[
+      "An archaeologist from this country discovered the Mask of Agamemnon searching for Troy.",
+      "A government here created the 'Entarte Kunst' (degenerate art) exhibition.",
+      "Die Brucke artist Ernst Kirchner was from here.",
+      "Heinrich Schliemann was from this country.",
+      "Degenerate art was banned here by the Nazi party."
+    ],
+    fullQ:"Home to Schliemann who found the Mask of Agamemnon. The Nazis created the degenerate art exhibition here. Name this country.",
+    wrongChoices:["Austria","France","Italy"],
+    funFact:"The Mask of Agamemnon, found by Schliemann at Mycenae, may actually predate the legendary king by 300 years!"
+  },
+  {
+    id:17, answer:"Pakistan", accept:["pakistan"],
+    region:"South Asia", icon:"\u{1F1F5}\u{1F1F0}", category:"Modern History",
+    hints:[
+      "This country's former Northwest Frontier province was bounded by the Durand Line.",
+      "Muhammad Ali Jinnah became its first governor general.",
+      "Shortly after independence, conflict broke out with its majority Hindu neighbor.",
+      "It disputes the Jammu and Kashmir state with China and India.",
+      "Its capital is Islamabad."
+    ],
+    fullQ:"The Durand Line bounded its Northwest Frontier. Jinnah was first governor general. It disputes Kashmir with India. Name this nation governed from Islamabad.",
+    wrongChoices:["India","Afghanistan","Bangladesh"],
+    funFact:"Pakistan means 'Land of the Pure' in Urdu, coined from the letters of Punjab, Afghania, Kashmir, Sindh, and Baluchistan."
+  },
+  {
+    id:18, answer:"George III", accept:["george iii","george the third","george 3","king george iii","king george 3"],
+    region:"Britain", icon:"\u{1F1EC}\u{1F1E7}", category:"American Revolution",
+    hints:[
+      "The grandson of the king, he was named Prince of Wales after his father Frederick's 1756 death.",
+      "He authorized taxes on British colonies to pay for the Seven Years' War.",
+      "He suffered from dementia and insanity in his later years.",
+      "He was the British king during the American Revolution.",
+      "He was the third of his name."
+    ],
+    fullQ:"Named Prince of Wales after Frederick's death, he taxed colonies for the Seven Years' War and went insane. Name this British king during the American Revolution.",
+    wrongChoices:["George II","George IV","Henry VIII"],
+    funFact:"Modern research suggests George III's 'madness' may have been caused by porphyria, a blood disorder, or possibly arsenic poisoning from medications."
+  },
+  {
+    id:19, answer:"Thailand", accept:["thailand","siam"],
+    region:"Southeast Asia", icon:"\u{1F1F9}\u{1F1ED}", category:"Modern History",
+    hints:[
+      "Absolute Chakri rule ended with this country's 1932 constitution.",
+      "Its King Bhumibol ruled from 1946 to his 2016 death.",
+      "Military leader Prayuth Chan-ocha applied lese-majeste laws here.",
+      "Its new king is Vajiralongkorn, styled as Rama X.",
+      "Protests supporting the Shinawatra family have taken place in Bangkok."
+    ],
+    fullQ:"Chakri rule ended in 1932. King Bhumibol ruled until 2016. Name this country with lese-majeste laws, capital Bangkok.",
+    wrongChoices:["Myanmar","Cambodia","Malaysia"],
+    funFact:"Thailand is the only Southeast Asian country never colonized by a European power. Its name means 'Land of the Free.'"
+  },
+  {
+    id:20, answer:"Versailles", accept:["versailles","palace of versailles"],
+    region:"France", icon:"\u{1F3F0}", category:"European History",
+    hints:[
+      "Negotiations here defined the modern borders of Hungary via the Treaty of Trianon.",
+      "The third building campaign here occurred after the Dutch War.",
+      "It includes the famous Hall of Mirrors.",
+      "Louis XIV of France established his court here.",
+      "The primary treaty ending World War I was signed here."
+    ],
+    fullQ:"Treaty of Trianon was negotiated here. The Hall of Mirrors was built here. Name this palace of Louis XIV where the WWI treaty was signed.",
+    wrongChoices:["Louvre","Fontainebleau","Buckingham Palace"],
+    funFact:"The Hall of Mirrors at Versailles contains 357 mirrors and was where Germany was proclaimed an empire in 1871 and where WWI was officially ended in 1919."
+  },
+  {
+    id:21, answer:"Pi", accept:["pi","\u03C0"],
+    region:"Ancient World", icon:"\u{1F4D0}", category:"Science & Math",
+    hints:[
+      "Approximations for this number named 'Milu' were discovered by Zu Chongzhi: 355/113.",
+      "Archimedes used a polygon algorithm to find bounds for this constant.",
+      "It equals the ratio of a circle's circumference to its diameter.",
+      "It is an irrational number starting with 3.14.",
+      "It is one of the most famous constants in mathematics."
+    ],
+    fullQ:"Zu Chongzhi found 355/113 for this. Archimedes bounded it with polygons. Name this constant, the ratio of circumference to diameter, roughly 3.14.",
+    wrongChoices:["Euler's number (e)","Golden Ratio","Square root of 2"],
+    funFact:"Zu Chongzhi's approximation of 355/113 was accurate to 7 decimal places and wasn't surpassed for nearly 1,000 years!"
+  },
+  {
+    id:22, answer:"Charlemagne", accept:["charlemagne","charles the great","charles i","carolus magnus","karl de grosse","karl der grosse"],
+    region:"Central Europe", icon:"\u{2694}\u{FE0F}", category:"Medieval History",
+    hints:[
+      "In one expedition, he defeated Desiderius and conquered the Lombard kingdom.",
+      "Basque troops destroyed his rearguard in Roncevaux Pass in the Pyrenees.",
+      "He was the son of Pepin the Short.",
+      "He was coronated on Christmas Day by Pope Leo III.",
+      "This Frankish king was crowned Holy Roman Emperor in 800."
+    ],
+    fullQ:"He conquered the Lombards and lost at Roncevaux Pass. Son of Pepin the Short, crowned by Pope Leo III. Name this Frankish king, Holy Roman Emperor in 800.",
+    wrongChoices:["Clovis","Louis XIV","Frederick Barbarossa"],
+    funFact:"Charlemagne's empire covered most of Western Europe. He is considered the 'Father of Europe' and ancestor of most European royal families."
+  },
+  {
+    id:23, answer:"Churches", accept:["church","churches"],
+    region:"United States", icon:"\u{26EA}", category:"American History",
+    hints:[
+      "Richard Allen converted a blacksmith shop into one of these in 1790s Philadelphia.",
+      "Jonathan Edwards worked at one in Northampton.",
+      "Two lanterns were hung in one of these in Boston for Paul Revere's Ride.",
+      "Boston's Old North and Trinity are examples.",
+      "These are buildings for Christian congregations."
+    ],
+    fullQ:"Richard Allen converted a blacksmith shop into one. Two lanterns hung in Boston's Old North for Paul Revere. Name this type of building for Christian congregations.",
+    wrongChoices:["Schools","Courthouses","Libraries"],
+    funFact:"The 'one if by land, two if by sea' lantern signal from Old North Church warned that British troops were crossing the Charles River."
+  },
+  {
+    id:24, answer:"Poland", accept:["poland"],
+    region:"Eastern Europe", icon:"\u{1F1F5}\u{1F1F1}", category:"European History",
+    hints:[
+      "In 1863, protests against Russian conscription here led to the January Uprising.",
+      "After an 1846 uprising, Austria and Russia revoked its city of Krakow's 'free city' status.",
+      "This violated the Congress of Vienna.",
+      "European powers thrice partitioned this country in the 18th century.",
+      "It was the former site of the Duchy of Warsaw."
+    ],
+    fullQ:"The January Uprising (1863) protested Russian conscription here. Krakow lost free city status. Name this thrice-partitioned country, site of the Duchy of Warsaw.",
+    wrongChoices:["Czech Republic","Hungary","Lithuania"],
+    funFact:"Poland was completely erased from the map of Europe for 123 years (1795-1918) after being partitioned by Russia, Prussia, and Austria."
+  },
+  {
+    id:25, answer:"George Washington", accept:["george washington","washington"],
+    region:"United States", icon:"\u{1F1FA}\u{1F1F8}", category:"American Revolution",
+    hints:[
+      "He was Edward Braddock's chief aide during the French and Indian War.",
+      "He attacked unprepared Hessian soldiers the day after Christmas.",
+      "Christopher Jackson won a Tony for portraying him in Hamilton.",
+      "He is introduced in the song 'Right Hand Man' in Hamilton.",
+      "He won the Battle of Trenton after crossing the Delaware River in 1776."
+    ],
+    fullQ:"Braddock's aide in the French and Indian War, he attacked Hessians after Christmas. He crossed the Delaware to win at Trenton. Name this Continental Army commander.",
+    wrongChoices:["Benjamin Franklin","Thomas Jefferson","John Adams"],
+    funFact:"Washington's crossing of the icy Delaware River on Christmas night 1776 was a desperate gamble that turned the tide of the Revolution."
+  },
+  {
+    id:26, answer:"Squanto", accept:["squanto","tisquantum"],
+    region:"North America", icon:"\u{1F33D}", category:"Colonial America",
+    hints:[
+      "Shortly before his death, he guided an expedition to Nantucket Sound aboard the Swan.",
+      "He harvested fish from the Eel River's muddy banks.",
+      "He explained methods of fertilizing corn and beans to colonists.",
+      "William Bradford wrote an account of him.",
+      "This Patuxet Native American helped the Plymouth colonists and the first Thanksgiving."
+    ],
+    fullQ:"He guided an expedition to Nantucket Sound and taught colonists to fertilize corn. Name this Patuxet Native American who helped Plymouth colonists at the first Thanksgiving.",
+    wrongChoices:["Pocahontas","Sitting Bull","Sacagawea"],
+    funFact:"Squanto had been kidnapped and taken to Europe years before the Pilgrims arrived, which is how he learned English!"
+  }
+];
+
+// ═══════════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════════
+let totalScore = 0;
+let streak = 0;
+let lastMode = 'buzzer';
+
+function updateTotalScore(pts) {
+  totalScore += pts;
+  document.getElementById('totalScore').textContent = totalScore;
+}
+function updateStreak(correct) {
+  if (correct) { streak++; } else { streak = 0; }
+  const badge = document.getElementById('streakBadge');
+  if (streak >= 2) {
+    badge.style.display = 'inline-flex';
+    document.getElementById('streakCount').textContent = streak;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function hideAll() {
+  ['menuScreen','buzzerArea','mapArea','interviewArea','summaryArea'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.display = 'none';
+    el.classList.remove('active');
+  });
+}
+function showScreen(id) {
+  hideAll();
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  el.classList.add('active');
+}
+function backToMenu() {
+  if (buzzerTimer) clearInterval(buzzerTimer);
+  showScreen('menuScreen');
+  document.getElementById('menuScreen').style.display = 'flex';
+}
+
+function startMode(mode) {
+  lastMode = mode;
+  if (mode === 'buzzer') initBuzzer();
+  else if (mode === 'map') initMap();
+  else if (mode === 'interview') initInterview();
+}
+function retryMode() { startMode(lastMode); }
+
+// ═══════════════════════════════════════
+// MODE 1: BUZZER QUIZ RACE
+// ═══════════════════════════════════════
+let buzzerQs, buzzerIdx, buzzerHintIdx, buzzerPts, buzzerScore, buzzerTimer, buzzerResults;
+const POINTS = [100, 80, 60, 40, 20];
+const HINT_LABELS = ['Expert (100pts)','Advanced (80pts)','Intermediate (60pts)','Easy (40pts)','Giveaway (20pts)'];
+const TIMER_SECS = 12;
+
+function initBuzzer() {
+  buzzerQs = shuffle([...questions]);
+  buzzerIdx = 0;
+  buzzerScore = 0;
+  buzzerResults = [];
+  document.getElementById('buzzerScore').textContent = 0;
+  showScreen('buzzerArea');
+  loadBuzzerQ();
+}
+
+function loadBuzzerQ() {
+  if (buzzerIdx >= buzzerQs.length) return showBuzzerSummary();
+  const q = buzzerQs[buzzerIdx];
+  buzzerHintIdx = 0;
+  buzzerPts = POINTS[0];
+  document.getElementById('buzzerQNum').textContent = `Q${buzzerIdx+1} / ${buzzerQs.length}`;
+  document.getElementById('buzzerResult').className = 'result-banner';
+  document.getElementById('buzzerResult').style.display = 'none';
+  document.getElementById('buzzerInputRow').classList.remove('show');
+  document.getElementById('buzzerActions').style.display = 'flex';
+  document.getElementById('buzzerNextBtn').style.display = 'none';
+
+  // build hint steps
+  const stepsEl = document.getElementById('hintSteps');
+  stepsEl.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const d = document.createElement('div');
+    d.className = 'hint-step' + (i === 0 ? ' active' : '');
+    stepsEl.appendChild(d);
+  }
+  showHint();
+  startTimer();
+}
+
+function showHint() {
+  const q = buzzerQs[buzzerIdx];
+  document.getElementById('hintText').textContent = q.hints[buzzerHintIdx];
+  document.getElementById('hintLabel').textContent = HINT_LABELS[buzzerHintIdx];
+  document.getElementById('hintPoints').textContent = POINTS[buzzerHintIdx];
+  buzzerPts = POINTS[buzzerHintIdx];
+  // update steps
+  document.querySelectorAll('.hint-step').forEach((s, i) => {
+    s.className = 'hint-step';
+    if (i < buzzerHintIdx) s.classList.add('revealed');
+    if (i === buzzerHintIdx) s.classList.add('active');
+  });
+}
+
+function buzzerNextHint() {
+  if (buzzerHintIdx < 4) {
+    buzzerHintIdx++;
+    showHint();
+  }
+}
+
+function startTimer() {
+  if (buzzerTimer) clearInterval(buzzerTimer);
+  if (!document.getElementById('timedToggle').checked) {
+    document.getElementById('timerBar').style.width = '100%';
+    document.getElementById('timerBar').className = 'timer-bar';
+    return;
+  }
+  let elapsed = 0;
+  const total = TIMER_SECS * 10;
+  document.getElementById('timerBar').style.width = '100%';
+  buzzerTimer = setInterval(() => {
+    elapsed++;
+    const pct = Math.max(0, 100 - (elapsed / total * 100));
+    const bar = document.getElementById('timerBar');
+    bar.style.width = pct + '%';
+    bar.className = 'timer-bar' + (pct < 30 ? ' danger' : pct < 60 ? ' warning' : '');
+    // auto advance hint
+    if (elapsed % (total / 5 | 0) === 0 && buzzerHintIdx < 4) {
+      buzzerHintIdx++;
+      showHint();
+    }
+    if (elapsed >= total) {
+      clearInterval(buzzerTimer);
+      buzzerTimeout();
+    }
+  }, 100);
+}
+
+function buzzerBuzz() {
+  if (buzzerTimer) clearInterval(buzzerTimer);
+  document.getElementById('buzzerActions').style.display = 'none';
+  document.getElementById('buzzerInputRow').classList.add('show');
+  document.getElementById('buzzerInput').value = '';
+  document.getElementById('buzzerInput').focus();
+}
+
+function buzzerSubmit() {
+  const input = document.getElementById('buzzerInput').value.trim();
+  if (!input) return;
+  const q = buzzerQs[buzzerIdx];
+  const correct = checkAnswer(input, q.accept);
+  const res = document.getElementById('buzzerResult');
+  if (correct) {
+    res.className = 'result-banner correct';
+    res.innerHTML = `<strong>Correct!</strong> +${buzzerPts} points<br><span class="answer-reveal">${q.answer}</span>`;
+    buzzerScore += buzzerPts;
+    updateTotalScore(buzzerPts);
+    updateStreak(true);
+    document.getElementById('buzzerScore').textContent = buzzerScore;
+    buzzerResults.push({ q: q.hints[4], a: q.answer, got: true, pts: buzzerPts });
+  } else {
+    res.className = 'result-banner wrong';
+    res.innerHTML = `<strong>Wrong!</strong> The answer was:<br><span class="answer-reveal">${q.answer}</span>`;
+    updateStreak(false);
+    buzzerResults.push({ q: q.hints[4], a: q.answer, got: false, pts: 0 });
+  }
+  document.getElementById('buzzerInputRow').classList.remove('show');
+  document.getElementById('buzzerNextBtn').style.display = 'inline-block';
+}
+
+function buzzerTimeout() {
+  const q = buzzerQs[buzzerIdx];
+  const res = document.getElementById('buzzerResult');
+  res.className = 'result-banner wrong';
+  res.innerHTML = `<strong>Time's up!</strong> The answer was:<br><span class="answer-reveal">${q.answer}</span>`;
+  document.getElementById('buzzerActions').style.display = 'none';
+  document.getElementById('buzzerNextBtn').style.display = 'inline-block';
+  updateStreak(false);
+  buzzerResults.push({ q: q.hints[4], a: q.answer, got: false, pts: 0 });
+}
+
+function buzzerNextQ() {
+  buzzerIdx++;
+  loadBuzzerQ();
+}
+
+function showBuzzerSummary() {
+  showScreen('summaryArea');
+  document.getElementById('summaryTitle').textContent = 'Buzzer Race Complete!';
+  document.getElementById('summaryScore').textContent = buzzerScore + ' pts';
+  const max = buzzerQs.length * 100;
+  const pct = (buzzerScore / max * 100) | 0;
+  let grade = pct >= 90 ? 'S Rank - History Master!' : pct >= 70 ? 'A Rank - Great Job!' : pct >= 50 ? 'B Rank - Good Effort!' : pct >= 30 ? 'C Rank - Keep Studying!' : 'D Rank - Review Time!';
+  document.getElementById('summaryGrade').textContent = grade;
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '<h3 style="margin-bottom:12px;">Review</h3>';
+  buzzerResults.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'review-item' + (r.got ? '' : ' missed');
+    div.innerHTML = `<div class="q">${r.q}</div><div class="a">${r.got ? '\u2714' : '\u2718'} ${r.a} ${r.got ? '(+'+r.pts+')' : ''}</div>`;
+    list.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════
+// MODE 2: MAP CONQUEST
+// ═══════════════════════════════════════
+let mapQs, mapScore2, mapConquered2;
+
+const REGION_MAP = {
+  "Russia": { icon: "\u{1F1F7}\u{1F1FA}", name: "Russia" },
+  "China": { icon: "\u{1F1E8}\u{1F1F3}", name: "China" },
+  "Southeast Asia": { icon: "\u{1F30F}", name: "SE Asia" },
+  "South America": { icon: "\u{1F30E}", name: "S. America" },
+  "East Asia": { icon: "\u{1F1ED}\u{1F1F0}", name: "East Asia" },
+  "Colombia": { icon: "\u{1F1E8}\u{1F1F4}", name: "Colombia" },
+  "United States": { icon: "\u{1F1FA}\u{1F1F8}", name: "USA" },
+  "Eastern Europe": { icon: "\u{1F3F0}", name: "E. Europe" },
+  "France": { icon: "\u{1F1EB}\u{1F1F7}", name: "France" },
+  "Black Sea": { icon: "\u{2693}", name: "Black Sea" },
+  "North America": { icon: "\u{1F33D}", name: "N. America" },
+  "Africa": { icon: "\u{1F1F8}\u{1F1E9}", name: "Africa" },
+  "Central Europe": { icon: "\u{1F1E9}\u{1F1EA}", name: "C. Europe" },
+  "South Asia": { icon: "\u{1F1F5}\u{1F1F0}", name: "South Asia" },
+  "Britain": { icon: "\u{1F1EC}\u{1F1E7}", name: "Britain" },
+  "Ancient World": { icon: "\u{1F4D0}", name: "Ancient" },
+};
+
+function initMap() {
+  mapQs = shuffle([...questions]);
+  mapScore2 = 0;
+  mapConquered2 = 0;
+  document.getElementById('mapScore').textContent = 0;
+  document.getElementById('mapConquered').textContent = 0;
+  document.getElementById('mapTotal').textContent = mapQs.length;
+  showScreen('mapArea');
+  buildMapGrid();
+}
+
+function buildMapGrid() {
+  const grid = document.getElementById('mapGrid');
+  grid.innerHTML = '';
+  mapQs.forEach((q, i) => {
+    const tile = document.createElement('div');
+    tile.className = 'map-tile';
+    tile.id = 'tile-' + i;
+    tile.innerHTML = `<div class="region-icon">${q.icon}</div><div class="region-name">${q.region}</div>`;
+    tile.onclick = () => openMapQ(i);
+    grid.appendChild(tile);
+  });
+}
+
+function openMapQ(i) {
+  const q = mapQs[i];
+  document.getElementById('mapModalRegion').textContent = q.region + ' - ' + q.category;
+  document.getElementById('mapModalQ').textContent = q.fullQ;
+  document.getElementById('mapFact').textContent = q.funFact;
+  document.getElementById('mapFact').classList.remove('show');
+  document.getElementById('mapModalNext').style.display = 'none';
+
+  // build 4 choices
+  const choices = shuffle([q.answer, ...q.wrongChoices]);
+  const container = document.getElementById('mapChoices');
+  container.innerHTML = '';
+  choices.forEach(c => {
+    const btn = document.createElement('div');
+    btn.className = 'map-choice';
+    btn.textContent = c;
+    btn.onclick = () => mapAnswer(i, c, q.answer, container);
+    container.appendChild(btn);
+  });
+  document.getElementById('mapModal').classList.add('show');
+}
+
+function mapAnswer(i, chosen, correct, container) {
+  const allBtns = container.querySelectorAll('.map-choice');
+  allBtns.forEach(b => {
+    b.classList.add('disabled');
+    if (b.textContent === correct) b.classList.add('correct-choice');
+    if (b.textContent === chosen && chosen !== correct) b.classList.add('wrong-choice');
+  });
+  const tile = document.getElementById('tile-' + i);
+  if (chosen === correct) {
+    tile.classList.add('conquered');
+    tile.onclick = null;
+    mapScore2 += 50;
+    mapConquered2++;
+    updateTotalScore(50);
+    updateStreak(true);
+  } else {
+    tile.classList.add('failed');
+    updateStreak(false);
+  }
+  document.getElementById('mapScore').textContent = mapScore2;
+  document.getElementById('mapConquered').textContent = mapConquered2;
+  document.getElementById('mapFact').classList.add('show');
+  document.getElementById('mapModalNext').style.display = 'inline-block';
+}
+
+function closeMapModal() {
+  document.getElementById('mapModal').classList.remove('show');
+  // check if all done
+  const remaining = document.querySelectorAll('.map-tile:not(.conquered):not(.failed)');
+  if (remaining.length === 0) {
+    setTimeout(() => {
+      showScreen('summaryArea');
+      document.getElementById('summaryTitle').textContent = 'Map Conquest Complete!';
+      document.getElementById('summaryScore').textContent = mapConquered2 + ' / ' + mapQs.length + ' conquered';
+      const pct = (mapConquered2 / mapQs.length * 100) | 0;
+      document.getElementById('summaryGrade').textContent = pct >= 90 ? 'World Dominator!' : pct >= 70 ? 'Great Conqueror!' : pct >= 50 ? 'Rising Empire!' : 'Keep Exploring!';
+      document.getElementById('reviewList').innerHTML = '';
+    }, 300);
+  }
+}
+
+// ═══════════════════════════════════════
+// MODE 3: MYSTERY FIGURE INTERVIEW
+// ═══════════════════════════════════════
+let intQs, intIdx, intClueIdx, intScore3, intResults;
+
+function initInterview() {
+  intQs = shuffle([...questions]);
+  intIdx = 0;
+  intScore3 = 0;
+  intResults = [];
+  showScreen('interviewArea');
+  loadInterviewQ();
+}
+
+function loadInterviewQ() {
+  if (intIdx >= intQs.length) return showInterviewSummary();
+  const q = intQs[intIdx];
+  intClueIdx = 0;
+  document.getElementById('interviewMystery').textContent =
+    `Mystery #${intIdx+1} of ${intQs.length} - Category: ${q.category}`;
+  document.getElementById('chatArea').innerHTML = '';
+  document.getElementById('interviewResult').className = 'result-banner';
+  document.getElementById('interviewResult').style.display = 'none';
+  document.getElementById('interviewActions').style.display = 'flex';
+  document.getElementById('interviewNextBtn').style.display = 'none';
+  document.getElementById('guessRow').classList.remove('show');
+  document.getElementById('interviewClues').innerHTML = '';
+  // build clue dots
+  for (let i = 0; i < 5; i++) {
+    const d = document.createElement('div');
+    d.className = 'clue-dot';
+    d.id = 'clue-dot-' + i;
+    document.getElementById('interviewClues').appendChild(d);
+  }
+  // opening message
+  addChat('figure', "I am a mystery from history! Ask me for clues to discover who or what I am. You have 5 clues. The fewer clues you need, the more points you earn!");
+}
+
+function addChat(who, text) {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + who;
+  const avatarEmoji = who === 'figure' ? '?' : '\u{1F464}';
+  div.innerHTML = `<div class="avatar">${avatarEmoji}</div><div class="chat-bubble">${text}</div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function askClue() {
+  if (intClueIdx >= 5) return;
+  const q = intQs[intIdx];
+  addChat('player', "Give me a clue!");
+  document.getElementById('clue-dot-' + intClueIdx).classList.add('used');
+  setTimeout(() => {
+    addChat('figure', q.hints[intClueIdx]);
+    intClueIdx++;
+    if (intClueIdx >= 5) {
+      setTimeout(() => {
+        addChat('figure', "That's all my clues! Make your guess now!");
+        document.getElementById('interviewActions').style.display = 'none';
+        showGuessRow();
+      }, 500);
+    }
+  }, 400);
+}
+
+function showGuessRow() {
+  document.getElementById('guessRow').classList.add('show');
+  document.getElementById('guessInput').value = '';
+  document.getElementById('guessInput').focus();
+}
+function hideGuessRow() {
+  document.getElementById('guessRow').classList.remove('show');
+}
+
+function submitGuess() {
+  const input = document.getElementById('guessInput').value.trim();
+  if (!input) return;
+  const q = intQs[intIdx];
+  const correct = checkAnswer(input, q.accept);
+  const pts = correct ? (5 - intClueIdx) * 30 : 0;
+  addChat('player', "My guess: " + input);
+  const res = document.getElementById('interviewResult');
+  if (correct) {
+    addChat('figure', `Yes! I am <strong>${q.answer}</strong>! Well done!`);
+    res.className = 'result-banner correct';
+    res.innerHTML = `<strong>Correct!</strong> +${pts} points (used ${intClueIdx} clues)<br><em>${q.funFact}</em>`;
+    intScore3 += pts;
+    updateTotalScore(pts);
+    updateStreak(true);
+    intResults.push({ q: q.category, a: q.answer, got: true, pts });
+  } else {
+    addChat('figure', `No... I am actually <strong>${q.answer}</strong>!`);
+    res.className = 'result-banner wrong';
+    res.innerHTML = `<strong>The answer was:</strong><br><span class="answer-reveal">${q.answer}</span><br><em>${q.funFact}</em>`;
+    updateStreak(false);
+    intResults.push({ q: q.category, a: q.answer, got: false, pts: 0 });
+  }
+  document.getElementById('interviewActions').style.display = 'none';
+  hideGuessRow();
+  document.getElementById('interviewNextBtn').style.display = 'inline-block';
+}
+
+function interviewNextQ() {
+  intIdx++;
+  loadInterviewQ();
+}
+
+function showInterviewSummary() {
+  showScreen('summaryArea');
+  document.getElementById('summaryTitle').textContent = 'Interview Round Complete!';
+  document.getElementById('summaryScore').textContent = intScore3 + ' pts';
+  const max = intQs.length * 150;
+  const pct = (intScore3 / max * 100) | 0;
+  document.getElementById('summaryGrade').textContent =
+    pct >= 80 ? 'Master Detective!' : pct >= 60 ? 'Great Investigator!' : pct >= 40 ? 'Good Effort!' : 'Keep Practicing!';
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '<h3 style="margin-bottom:12px;">Review</h3>';
+  intResults.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'review-item' + (r.got ? '' : ' missed');
+    div.innerHTML = `<div class="q">${r.q}</div><div class="a">${r.got ? '\u2714' : '\u2718'} ${r.a} ${r.got ? '(+'+r.pts+')' : ''}</div>`;
+    list.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.random() * (i + 1) | 0;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function checkAnswer(input, accepts) {
+  const norm = input.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+  return accepts.some(a => {
+    const na = a.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+    // exact match or one contains the other
+    return norm === na || norm.includes(na) || na.includes(norm);
+  });
+}
+</script>
+</body>
+</html>
