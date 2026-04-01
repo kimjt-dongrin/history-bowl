@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>HISTORY BEDWARS</title>
+<title>HISTORY CONQUEST</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -255,7 +255,7 @@ border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-siz
 
 <!-- MAIN MENU -->
 <div class="screen active" id="screen-menu">
-<div class="menu-title">HISTORY BEDWARS</div>
+<div class="menu-title">HISTORY CONQUEST</div>
 <div class="menu-subtitle">Collect Knowledge. Crush Enemy Bases. Win the Bowl.</div>
 <div class="stats-bar">
 <div class="stat-item"><div class="stat-val" id="stat-topics">0</div><div class="stat-label">Topics</div></div>
@@ -355,14 +355,14 @@ kitsUnlocked: ['soldier'],
 
 function loadState() {
 try {
-const s = JSON.parse(localStorage.getItem('historyBedwars'));
+const s = JSON.parse(localStorage.getItem('historyConquest'));
 if (s && s.level) return s;
 } catch(e) {}
 return defaultState();
 }
 
 function saveState() {
-localStorage.setItem('historyBedwars', JSON.stringify(state));
+localStorage.setItem('historyConquest', JSON.stringify(state));
 }
 
 function resetGame() {
