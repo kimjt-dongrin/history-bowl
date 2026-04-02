@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>HISTORY BOWL - 21 Day Challenge</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0a1a;--bg2:#12122a;--bg3:#1a1a3a;--text:#e8e8ff;--gold:#ffd700;
+--accent:#7c4dff;--accent2:#ff4081;--green:#00e676;--red:#ff4081;
+--blue:#448aff;--card:#161630;--card2:#1e1e40;--card-border:#2a2a5a;
+--dim:#888;--radius:14px;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes slideIn{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 5px var(--accent)}50%{box-shadow:0 0 20px var(--accent)}}
+@keyframes countPulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes buzzPulse{0%{box-shadow:0 0 0 0 rgba(255,64,129,.7)}70%{box-shadow:0 0 0 20px rgba(255,64,129,0)}100%{box-shadow:0 0 0 0 rgba(255,64,129,0)}}
+
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;
+min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+
+.screen{display:none;width:100%;min-height:100vh;padding:16px;max-width:800px;margin:0 auto}
+.screen.active{display:block;animation:fadeIn .3s ease}
+
+/* ══════ MAIN MENU ══════ */
+.menu-header{text-align:center;padding:30px 0 10px}
+.menu-title{font-size:clamp(24px,5vw,42px);font-weight:900;
+background:linear-gradient(135deg,var(--gold),var(--accent2),var(--accent));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px}
+.menu-subtitle{font-size:13px;color:var(--dim);margin-top:4px}
+
+.stats-bar{display:flex;justify-content:center;gap:20px;margin:16px 0;flex-wrap:wrap}
+.stat-item{text-align:center}
+.stat-val{font-size:22px;font-weight:900;color:var(--gold)}
+.stat-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+
+.calendar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:20px 0}
+.day-card{background:var(--card);border:2px solid var(--card-border);border-radius:12px;
+padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.day-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 4px 20px rgba(124,77,255,.2)}
+.day-card.locked{opacity:.4;cursor:not-allowed}
+.day-card.locked:hover{transform:none;border-color:var(--card-border);box-shadow:none}
+.day-card.completed{border-color:var(--green);box-shadow:0 0 10px rgba(0,230,118,.15)}
+.day-card.review{border-color:var(--accent2)}
+.day-card.final{border-color:var(--gold);box-shadow:0 0 12px rgba(255,215,0,.2)}
+.day-card.current{border-color:var(--accent);animation:glow 2s infinite}
+.day-num{font-size:20px;font-weight:900}
+.day-type{font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:4px 0;color:var(--dim)}
+.day-type.review-type{color:var(--accent2);font-weight:700}
+.day-type.final-type{color:var(--gold);font-weight:700}
+.day-topics{font-size:11px;color:var(--dim);margin-top:4px}
+.day-badge{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.day-badge.done{background:var(--green);color:#000}
+.day-badge.lock{background:#333;color:#666;font-size:10px}
+
+.reset-btn{display:block;margin:30px auto 20px;padding:8px 20px;border:1px solid #333;
+border-radius:6px;background:transparent;color:#555;font-size:11px;cursor:pointer}
+.reset-btn:hover{color:var(--red);border-color:var(--red)}
+
+/* ══════ DAY SCREEN (Lecture) ══════ */
+.day-header{text-align:center;padding:10px 0 16px}
+.day-header h2{font-size:22px;font-weight:900;color:var(--gold)}
+.day-header .phase-label{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-top:4px}
+
+.topic-nav{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.topic-dot{width:28px;height:28px;border-radius:50%;border:2px solid #333;background:transparent;
+color:var(--dim);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;
+justify-content:center;transition:all .2s}
+.topic-dot.active{border-color:var(--accent);color:var(--text);background:rgba(124,77,255,.2)}
+.topic-dot.done{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.1)}
+
+.progress-bar-wrap{height:6px;background:#222;border-radius:3px;margin-bottom:16px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s}
+
+.step-indicators{display:flex;gap:4px;justify-content:center;margin-bottom:12px}
+.step-ind{width:10px;height:10px;border-radius:50%;background:#333;cursor:pointer;transition:all .2s}
+.step-ind.active{background:var(--accent);transform:scale(1.3)}
+.step-ind.visited{background:#555}
+
+.lec-card{background:var(--card);border-radius:var(--radius);padding:20px;border:2px solid #333;margin-bottom:12px}
+.lec-card.highlight{border-color:var(--gold);background:linear-gradient(145deg,var(--card),#1a1a35)}
+.lec-step-label{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px}
+.lec-heading{font-size:1.2rem;font-weight:800;margin-bottom:10px}
+.lec-heading .emoji{font-size:1.4rem;margin-right:6px}
+.lec-text{font-size:.9rem;line-height:1.8;color:#ccc}
+.lec-text strong{color:var(--gold)}
+.lec-text .keyword{display:inline-block;background:rgba(124,77,255,.15);color:var(--accent);padding:1px 8px;border-radius:4px;font-weight:600}
+.lec-text .place{display:inline-block;background:rgba(0,230,118,.1);color:var(--green);padding:1px 8px;border-radius:4px;font-weight:600}
+.lec-text .date{display:inline-block;background:rgba(255,215,0,.1);color:var(--gold);padding:1px 8px;border-radius:4px;font-weight:600}
+.lec-text .person{display:inline-block;background:rgba(255,64,129,.1);color:var(--red);padding:1px 8px;border-radius:4px;font-weight:600}
+
+.lec-keypoints{margin:14px 0;padding:0;list-style:none}
+.lec-keypoints li{padding:8px 12px;margin-bottom:4px;background:rgba(255,255,255,.03);border-radius:6px;font-size:.85rem;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.lec-keypoints li::before{content:'';width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.lec-keypoints li:nth-child(1)::before{background:var(--red)}
+.lec-keypoints li:nth-child(2)::before{background:var(--gold)}
+.lec-keypoints li:nth-child(3)::before{background:var(--green)}
+.lec-keypoints li:nth-child(4)::before{background:var(--blue)}
+.lec-keypoints li:nth-child(5)::before{background:var(--accent)}
+.lec-keypoints li:nth-child(6)::before{background:#ff9800}
+
+.quiz-choices{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.quiz-choice{padding:14px 18px;background:var(--card2);border:2px solid #333;border-radius:10px;
+cursor:pointer;font-size:.92rem;transition:all .2s;text-align:left}
+.quiz-choice:hover{border-color:var(--blue);background:rgba(68,138,255,.06)}
+.quiz-choice.correct{border-color:var(--green)!important;background:rgba(0,230,118,.12)!important;color:var(--green)}
+.quiz-choice.wrong{border-color:var(--red)!important;background:rgba(255,64,129,.12)!important;animation:shake .3s}
+.quiz-choice.disabled{pointer-events:none;opacity:.7}
+
+.quiz-result{display:none;padding:12px;border-radius:10px;margin:10px 0;text-align:center;font-weight:600;font-size:.9rem}
+.quiz-result.show{display:block}
+.quiz-result.pass{background:rgba(0,230,118,.1);border:1px solid var(--green);color:var(--green)}
+.quiz-result.fail{background:rgba(255,64,129,.1);border:1px solid var(--red);color:var(--red)}
+
+.nav-buttons{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.btn{padding:10px 20px;border:2px solid var(--accent);border-radius:8px;background:transparent;
+color:var(--text);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1px}
+.btn:hover{background:var(--accent);color:#fff}
+.btn-gold{border-color:var(--gold);color:var(--gold)}
+.btn-gold:hover{background:var(--gold);color:#000}
+.btn-green{border-color:var(--green);color:var(--green)}
+.btn-green:hover{background:var(--green);color:#000}
+.btn-red{border-color:var(--red);color:var(--red)}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-small{padding:6px 14px;font-size:11px}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+
+.summary-card{background:linear-gradient(145deg,#0d2a1a,#0a1a10);border:2px solid var(--green);
+border-radius:var(--radius);padding:24px;text-align:center;margin:12px 0}
+.summary-card h3{color:var(--green);font-size:1.1rem}
+.summary-card .score{font-size:2.2rem;font-weight:900;color:var(--gold);margin:10px 0}
+
+.xp-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,230,118,.15);
+border:1px solid var(--green);color:var(--green);padding:8px 20px;border-radius:8px;font-weight:700;
+font-size:14px;z-index:999;pointer-events:none;animation:fadeIn .3s ease;display:none}
+
+/* ══════ FLASHCARD MODE ══════ */
+.flashcard-container{perspective:1000px;margin:0 auto;max-width:480px}
+.flashcard{width:100%;min-height:400px;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .6s}
+.flashcard.flipped{transform:rotateY(180deg)}
+.flash-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius);padding:20px;display:flex;flex-direction:column}
+.flash-front{background:linear-gradient(145deg,#1a1a45,#12122e);border:2px solid var(--accent)}
+.flash-back{background:linear-gradient(145deg,#0d2a1a,#0a1a10);border:2px solid var(--green);transform:rotateY(180deg)}
+.flash-era{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px}
+.flash-icon{font-size:2.5rem;text-align:center;margin:6px 0}
+.flash-title{font-size:1.3rem;font-weight:800;text-align:center;color:var(--gold);margin-bottom:14px}
+.flash-facts{list-style:none;flex:1}
+.flash-facts li{padding:8px 12px;margin-bottom:5px;background:rgba(255,255,255,.04);border-radius:8px;
+font-size:.85rem;line-height:1.5;border-left:3px solid var(--accent);display:flex;gap:8px}
+.flash-facts li .num{color:var(--gold);font-weight:700;flex-shrink:0;min-width:18px}
+.flash-hint{text-align:center;font-size:.8rem;color:var(--dim);margin-top:10px;animation:pulse 2s infinite}
+.flash-back .flash-era{color:var(--green)}
+.flash-back .flash-facts li{border-left-color:var(--green)}
+.answer-box{text-align:center;margin:12px 0;padding:14px;background:rgba(0,230,118,.1);border-radius:12px;border:2px solid var(--green)}
+.answer-box .answer-label{font-size:.7rem;color:var(--green);text-transform:uppercase;letter-spacing:2px}
+.answer-box .answer-text{font-size:1.5rem;font-weight:900;color:var(--gold);margin-top:4px}
+.answer-box .answer-alt{font-size:.8rem;color:var(--dim);margin-top:4px}
+.fun-fact{margin-top:10px;padding:10px;background:rgba(255,215,0,.06);border-radius:10px;font-size:.82rem;
+line-height:1.5;border-left:3px solid var(--gold)}
+.fun-fact strong{color:var(--gold)}
+
+.self-grade{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.grade-btn{padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:2px solid;transition:all .2s}
+.grade-knew{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.08)}
+.grade-knew:hover{background:var(--green);color:#000}
+.grade-miss{border-color:var(--red);color:var(--red);background:rgba(255,64,129,.08)}
+.grade-miss:hover{background:var(--red);color:#fff}
+
+.fc-progress{text-align:center;font-size:13px;color:var(--dim);margin:10px 0}
+
+/* ══════ REVIEW DAY / BOWL SIM ══════ */
+.mode-select{display:flex;gap:12px;justify-content:center;margin:20px 0;flex-wrap:wrap}
+.mode-card{background:var(--card);border:2px solid var(--card-border);border-radius:14px;
+padding:20px;text-align:center;cursor:pointer;transition:all .2s;flex:1;min-width:200px;max-width:300px}
+.mode-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 20px rgba(124,77,255,.2)}
+.mode-card .mode-icon{font-size:40px;margin-bottom:8px}
+.mode-card .mode-name{font-size:16px;font-weight:800}
+.mode-card .mode-desc{font-size:12px;color:var(--dim);margin-top:6px}
+
+.bowl-hud{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;
+background:var(--card);border-radius:10px;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.bowl-score{font-size:20px;font-weight:900;color:var(--gold)}
+.bowl-qnum{font-size:13px;color:var(--dim)}
+.bowl-timer{font-size:18px;font-weight:700;color:var(--accent)}
+
+.bowl-hint-area{background:var(--card);border-radius:var(--radius);padding:16px;border:2px solid var(--card-border);margin-bottom:12px;min-height:200px}
+.bowl-hint{padding:8px 12px;margin:6px 0;background:rgba(255,255,255,.04);border-radius:8px;
+font-size:.9rem;line-height:1.5;border-left:3px solid var(--accent);opacity:0;transition:opacity .5s}
+.bowl-hint.revealed{opacity:1}
+.bowl-hint .pts{color:var(--gold);font-weight:700;margin-right:8px}
+
+.buzz-btn{display:block;width:100%;max-width:300px;margin:12px auto;padding:16px;border:3px solid var(--accent2);
+border-radius:14px;background:rgba(255,64,129,.1);color:var(--accent2);font-size:18px;font-weight:900;
+cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all .2s}
+.buzz-btn:hover{background:var(--accent2);color:#fff;animation:buzzPulse 1s}
+.buzz-btn:disabled{opacity:.3;cursor:not-allowed;animation:none}
+
+.bowl-input-area{display:none;text-align:center;margin:12px 0}
+.bowl-input{width:100%;max-width:400px;padding:12px 16px;border:2px solid var(--accent);border-radius:10px;
+background:var(--bg2);color:var(--text);font-size:16px;text-align:center;outline:none}
+.bowl-input:focus{border-color:var(--gold);box-shadow:0 0 10px rgba(255,215,0,.2)}
+.bowl-submit{margin-top:8px;padding:10px 30px;border:2px solid var(--green);border-radius:8px;
+background:transparent;color:var(--green);font-size:14px;font-weight:700;cursor:pointer}
+.bowl-submit:hover{background:var(--green);color:#000}
+
+.bowl-result{display:none;text-align:center;padding:16px;margin:12px 0;border-radius:12px;font-size:15px;font-weight:700}
+.bowl-result.correct-r{background:rgba(0,230,118,.1);border:2px solid var(--green);color:var(--green)}
+.bowl-result.wrong-r{background:rgba(255,64,129,.1);border:2px solid var(--red);color:var(--red)}
+
+.bowl-final{text-align:center;padding:30px 16px}
+.bowl-final h2{font-size:24px;color:var(--gold);margin-bottom:10px}
+.bowl-final .final-score{font-size:48px;font-weight:900;color:var(--gold);margin:16px 0}
+.bowl-final .final-detail{font-size:14px;color:var(--dim);margin:4px 0}
+
+.back-btn{position:fixed;bottom:16px;left:16px;z-index:90;padding:8px 16px;font-size:12px;
+background:rgba(10,10,26,.9);border:1px solid #444;border-radius:6px;color:var(--dim);cursor:pointer;
+backdrop-filter:blur(5px)}
+.back-btn:hover{color:var(--text);border-color:var(--accent)}
+
+.phase-lock{text-align:center;padding:30px;margin:20px 0;background:var(--card);border-radius:14px;border:2px dashed #444}
+.phase-lock .lock-icon{font-size:40px;margin-bottom:10px}
+.phase-lock p{color:var(--dim);font-size:14px}
+
+.review-list{margin:16px 0}
+.review-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
+border-bottom:1px solid #1a1a3a;font-size:.85rem}
+.review-item .ri-status{font-size:16px}
+
+@media(max-width:480px){
+.calendar-grid{grid-template-columns:repeat(3,1fr)}
+.topic-dot{width:24px;height:24px;font-size:10px}
+.lec-card{padding:14px}
+.bowl-hud{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<div class="xp-toast" id="xpToast"></div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: MAIN MENU
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-menu">
+  <div class="menu-header">
+    <div class="menu-title">HISTORY BOWL</div>
+    <div class="menu-subtitle">21 Day Challenge</div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-val" id="stat-days">0</div><div class="stat-label">Days Done</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-topics">0</div><div class="stat-label">Topics Learned</div></div>
+    <div class="stat-item"><div class="stat-val" id="stat-xp">0</div><div class="stat-label">Total XP</div></div>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+  <button class="reset-btn" onclick="if(confirm('Reset all progress?')){localStorage.removeItem('hb21');location.reload()}">Reset Progress</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: LEARNING DAY (Phase 1: Lecture)
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-day">
+  <div class="day-header">
+    <h2 id="dayTitle">DAY 1</h2>
+    <div class="phase-label" id="phaseLabel">Phase 1: Lecture</div>
+  </div>
+  <div class="topic-nav" id="topicNav"></div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="dayProgress"></div></div>
+  <div class="step-indicators" id="stepIndicators"></div>
+  <div id="lectureContent"></div>
+  <div class="nav-buttons" id="lecNavBtns">
+    <button class="btn btn-small" id="btnPrevStep" onclick="lecStep(-1)">Prev</button>
+    <button class="btn btn-small btn-gold" id="btnNextStep" onclick="lecStep(1)">Next</button>
+  </div>
+  <button class="back-btn" onclick="goMenu()">Back</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: FLASHCARD PHASE (Phase 2 for learn days, or review mode)
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-flash">
+  <div class="day-header">
+    <h2 id="flashTitle">Phase 2: Flashcard Quiz</h2>
+    <div class="phase-label" id="flashSubtitle"></div>
+  </div>
+  <div class="fc-progress" id="fcProgress"></div>
+  <div class="flashcard-container">
+    <div class="flashcard" id="flashcard" onclick="flipFlash()">
+      <div class="flash-face flash-front" id="flashFront"></div>
+      <div class="flash-face flash-back" id="flashBack"></div>
+    </div>
+  </div>
+  <div class="self-grade" id="selfGrade" style="display:none">
+    <button class="grade-btn grade-knew" onclick="gradeFlash(true)">I Knew It!</button>
+    <button class="grade-btn grade-miss" onclick="gradeFlash(false)">Need Study</button>
+  </div>
+  <div style="text-align:center;margin-top:10px">
+    <button class="btn btn-small" onclick="flipFlash()" id="flipBtn">Flip Card</button>
+  </div>
+  <button class="back-btn" onclick="goMenu()">Back</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: FLASHCARD SUMMARY
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-flash-summary">
+  <div class="summary-card">
+    <h3 id="fsSummaryTitle">Flashcard Complete!</h3>
+    <div class="score" id="fsSummaryScore"></div>
+  </div>
+  <div id="fsSummaryList"></div>
+  <div style="text-align:center;margin-top:16px">
+    <button class="btn btn-gold" onclick="goMenu()">Back to Menu</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: REVIEW DAY MODE SELECT
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-review">
+  <div class="day-header">
+    <h2 id="reviewTitle">REVIEW: DAY 1-5</h2>
+    <div class="phase-label">Choose Your Mode</div>
+  </div>
+  <div class="mode-select">
+    <div class="mode-card" onclick="startReviewFlash()">
+      <div class="mode-icon">🃏</div>
+      <div class="mode-name">Flashcard Blitz</div>
+      <div class="mode-desc">Rapid-fire flashcards from all topics. Flip and self-grade.</div>
+    </div>
+    <div class="mode-card" onclick="startBowlSim()">
+      <div class="mode-icon">🏆</div>
+      <div class="mode-name">Bowl Simulator</div>
+      <div class="mode-desc">Simulates a real History Bowl match with progressive hints and buzzing.</div>
+    </div>
+  </div>
+  <button class="back-btn" onclick="goMenu()">Back</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: BOWL SIMULATOR
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-bowl">
+  <div class="bowl-hud">
+    <div><span class="bowl-qnum" id="bowlQnum">Q 1/25</span></div>
+    <div class="bowl-timer" id="bowlTimer">30</div>
+    <div><span class="bowl-score" id="bowlScore">0 pts</span></div>
+  </div>
+  <div class="bowl-hint-area" id="bowlHints"></div>
+  <button class="buzz-btn" id="buzzBtn" onclick="buzzIn()">BUZZ IN!</button>
+  <div class="bowl-input-area" id="bowlInputArea">
+    <input type="text" class="bowl-input" id="bowlInput" placeholder="Type your answer..." autocomplete="off">
+    <br>
+    <button class="bowl-submit" onclick="submitBowlAnswer()">Submit</button>
+  </div>
+  <div class="bowl-result" id="bowlResult"></div>
+  <div style="text-align:center;margin-top:10px">
+    <button class="btn btn-small btn-gold" id="bowlNextBtn" onclick="nextBowlQ()" style="display:none">Next Question</button>
+  </div>
+  <button class="back-btn" onclick="endBowl()">Quit</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: BOWL FINAL
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-bowl-final">
+  <div class="bowl-final">
+    <h2>Bowl Complete!</h2>
+    <div class="final-score" id="bowlFinalScore">0</div>
+    <div class="final-detail" id="bowlFinalDetail"></div>
+    <div class="review-list" id="bowlReviewList"></div>
+    <button class="btn btn-gold" onclick="goMenu()" style="margin-top:20px">Back to Menu</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA: 20 Topics for DAY 1 with full lecture content
+// ══════════════════════════════════════════════════════════════
+const DAY_TOPICS = {
+1: [
+// ─── Topic 0: Leningrad ───
+{
+  id:"d1t0", name:"Leningrad", era:"World Wars", icon:"🏙️",
+  accept:["St. Petersburg","Petrograd"],
+  facts:[
+    "The siege of this city was lifted by a corridor over neighboring Lake Ladoga, and was the target of Army Group North during Operation Barbarossa.",
+    "This city was renamed in 1914 from its Germanic name, again in 1924, and reverted to its original name in 1991.",
+    "During a 900-day siege in WWII, over one million civilians died from starvation, disease, and bombardment in this city.",
+    "The Kirov Ballet and the Hermitage Museum are both located in this city on the Neva River.",
+    "Known as St. Petersburg, then Petrograd, then this Soviet-era name honoring the Bolshevik leader."
+  ],
+  funFact:"The Siege of Leningrad lasted 872 days. Over 1 million civilians died, mostly from starvation. It remains one of history's deadliest sieges.",
+  lecture:{
+    intro:{
+      title:"The Siege of Leningrad",
+      body:`During <span class="date">World War II</span>, one of the most devastating events on the Eastern Front was the <strong>Siege of Leningrad</strong>. When <span class="person">Adolf Hitler</span> launched <span class="keyword">Operation Barbarossa</span> in <span class="date">June 1941</span> — a massive surprise invasion of the Soviet Union — he divided his forces into three groups. <span class="keyword">Army Group North</span> was specifically assigned to capture this historic city on the <span class="place">Neva River</span>.<br><br>But why was this city so important? It was the former capital of Russia, home to the magnificent <strong>Hermitage Museum</strong> and the famous <strong>Kirov Ballet</strong>. Capturing it would have been a huge psychological blow to the Soviet people.`
+    },
+    details:{
+      title:"872 Days of Horror",
+      body:`The siege lasted an incredible <span class="date">872 days</span> — from <span class="date">September 1941</span> to <span class="date">January 1944</span>. That's nearly <strong>two and a half years</strong>! The city was almost completely surrounded by German forces.<br><br>The only supply route was called the <strong>"Road of Life"</strong> — a corridor built over frozen <span class="place">Lake Ladoga</span> during winter. Trucks drove across the ice to bring food and evacuate civilians. Over <strong>one million civilians</strong> died, mostly from starvation, making it one of history's deadliest sieges. People ate wallpaper paste and boiled leather just to survive.`
+    },
+    keyFacts:[
+      "Operation Barbarossa — Germany's invasion of the USSR (June 1941)",
+      "Army Group North — The force assigned to capture Leningrad",
+      "Lake Ladoga — The frozen lake used as the 'Road of Life' supply corridor",
+      "872 days — Length of the siege (Sept 1941 - Jan 1944)",
+      "3 name changes: St. Petersburg (before 1914) -> Petrograd (1914) -> Leningrad (1924) -> St. Petersburg (1991)"
+    ],
+    bowlTip:`When you hear <em>"Lake Ladoga"</em>, <em>"Road of Life"</em>, <em>"Army Group North"</em>, <em>"renamed three times"</em>, or <em>"Neva River + Hermitage"</em> — buzz in with <strong>Leningrad</strong> (also accept St. Petersburg or Petrograd).<br><br>Memory trick: <em>"Peter -> Petro -> Lenin -> Peter again"</em> — the city always comes back to Peter!`,
+    quiz:{
+      question:"Which city was the target of Army Group North during Operation Barbarossa and was besieged for over 2 years, with supplies coming across Lake Ladoga?",
+      choices:["Moscow","Leningrad","Stalingrad","Kiev"],
+      correct:1,
+      explanation:"Leningrad (also known as St. Petersburg and Petrograd) endured a 872-day siege. Moscow was the target of Army Group Center, and Stalingrad was on the southern front."
+    }
+  }
+},
+// ─── Topic 1: Vietnam War ───
+{
+  id:"d1t1", name:"Vietnam War", era:"World Wars", icon:"🌿",
+  accept:[],
+  facts:[
+    "The casualties in one battle of this war led James Spears to compare its machine gun fire to a hamburger machine.",
+    "Hill 937 became known as Hamburger Hill in this war, during which Company C committed the My Lai Massacre.",
+    "The Gulf of Tonkin Resolution in 1964 gave President Johnson broad authority to escalate this conflict.",
+    "The Tet Offensive of 1968 was a turning point in American public opinion against this war.",
+    "This Southeast Asian war ended with the fall of Saigon in 1975, as the last US forces withdrew by helicopter."
+  ],
+  funFact:"The fall of Saigon in 1975 ended the Vietnam War. The iconic image of a helicopter evacuation from a rooftop became the symbol of America's withdrawal.",
+  lecture:{
+    intro:{
+      title:"The Vietnam War",
+      body:`The <strong>Vietnam War</strong> was one of the longest and most controversial conflicts the United States ever fought. It took place in <span class="place">Southeast Asia</span>, primarily in <span class="place">Vietnam</span>, from the late 1950s to <span class="date">1975</span>.<br><br>The basic conflict was between <strong>North Vietnam</strong> (communist, supported by the Soviet Union and China) and <strong>South Vietnam</strong> (supported by the United States). America feared that if Vietnam fell to communism, neighboring countries would follow — this was called the <span class="keyword">Domino Theory</span>.`
+    },
+    details:{
+      title:"Key Events and Turning Points",
+      body:`In <span class="date">1964</span>, the <span class="keyword">Gulf of Tonkin Resolution</span> gave President <span class="person">Lyndon B. Johnson</span> the authority to send American troops to Vietnam without a formal declaration of war. This escalated US involvement massively.<br><br>The <span class="keyword">Tet Offensive</span> of <span class="date">1968</span> was a massive surprise attack by North Vietnamese forces during the Vietnamese New Year. Although the US eventually pushed it back, the shocking scale of the attack turned American public opinion against the war.<br><br>One of the war's darkest moments was the <span class="keyword">My Lai Massacre</span>, where American soldiers killed hundreds of unarmed Vietnamese civilians. <strong>Hill 937</strong>, nicknamed <span class="keyword">Hamburger Hill</span>, became a symbol of the war's brutal and seemingly pointless battles.`
+    },
+    keyFacts:[
+      "Gulf of Tonkin Resolution (1964) — gave LBJ power to escalate the war",
+      "Tet Offensive (1968) — turned American public opinion against the war",
+      "My Lai Massacre — American soldiers killed unarmed Vietnamese civilians",
+      "Hamburger Hill (Hill 937) — a brutal and controversial battle",
+      "Fall of Saigon (1975) — the war ended as last US helicopters evacuated"
+    ],
+    bowlTip:`Listen for: <em>"Gulf of Tonkin"</em>, <em>"Tet Offensive"</em>, <em>"My Lai"</em>, <em>"Hamburger Hill"</em>, <em>"fall of Saigon"</em>, or <em>"helicopter evacuation"</em>. All point to the <strong>Vietnam War</strong>.`,
+    quiz:{
+      question:"What 1964 resolution gave President Johnson broad authority to escalate US involvement in Vietnam?",
+      choices:["War Powers Resolution","Gulf of Tonkin Resolution","Domino Resolution","Southeast Asia Treaty"],
+      correct:1,
+      explanation:"The Gulf of Tonkin Resolution was passed after a reported attack on US ships in the Gulf of Tonkin, giving LBJ nearly unlimited military authority in Vietnam."
+    }
+  }
+},
+// ─── Topic 2: Berlin ───
+{
+  id:"d1t2", name:"Berlin", era:"World Wars", icon:"🧱",
+  accept:[],
+  facts:[
+    "This city's Gauleiter for two decades was Joseph Goebbels.",
+    "A famous photo taken by Yevgeny Khaldei shows a soldier raising a Soviet flag over this city's Reichstag.",
+    "The Fuhrerbunker, where Hitler spent his final days, was constructed beneath this capital city.",
+    "This city was divided into four occupation zones after WWII by the US, UK, France, and USSR.",
+    "A wall dividing this German capital stood from 1961 to 1989, symbolizing the Iron Curtain."
+  ],
+  funFact:"The Berlin Wall stood from 1961 to 1989. When it fell on November 9, 1989, people chipped off pieces as souvenirs. Today, sections of the wall are displayed worldwide as symbols of freedom.",
+  lecture:{
+    intro:{
+      title:"Berlin: A City Divided",
+      body:`<span class="place">Berlin</span>, the capital of <span class="place">Germany</span>, is one of the most historically significant cities of the 20th century. During <span class="date">World War II</span>, it was the headquarters of <span class="person">Adolf Hitler</span>'s Nazi regime. The <strong>Fuhrerbunker</strong>, an underground shelter where Hitler spent his final days before taking his own life in <span class="date">April 1945</span>, was built beneath this city.<br><br>For two decades, Berlin's <span class="keyword">Gauleiter</span> (Nazi regional leader) was <span class="person">Joseph Goebbels</span>, Hitler's propaganda minister. One of the most iconic photos of WWII shows a Soviet soldier raising the <strong>Soviet flag over the Reichstag</strong> (Germany's parliament building), taken by photographer <span class="person">Yevgeny Khaldei</span>.`
+    },
+    details:{
+      title:"Four Zones and a Wall",
+      body:`After Germany's defeat in <span class="date">1945</span>, Berlin was divided into <strong>four occupation zones</strong> controlled by the <span class="place">United States</span>, <span class="place">United Kingdom</span>, <span class="place">France</span>, and the <span class="place">Soviet Union</span>. The city became a flashpoint of the Cold War.<br><br>In <span class="date">1961</span>, the East German government built the <span class="keyword">Berlin Wall</span> to stop people from fleeing to the West. This concrete barrier with guard towers became the most powerful symbol of the <span class="keyword">Iron Curtain</span> — the divide between communist Eastern Europe and democratic Western Europe. The wall stood until <span class="date">November 9, 1989</span>, when it was finally torn down in one of the most joyful moments of the 20th century.`
+    },
+    keyFacts:[
+      "Fuhrerbunker — Hitler's underground shelter in Berlin (final days, April 1945)",
+      "Yevgeny Khaldei's photo — Soviet flag raised over the Reichstag",
+      "Joseph Goebbels — Berlin's Gauleiter for 20 years",
+      "Four occupation zones (US, UK, France, USSR) after WWII",
+      "Berlin Wall: 1961-1989 — symbol of the Iron Curtain"
+    ],
+    bowlTip:`Key triggers: <em>"Fuhrerbunker"</em>, <em>"Reichstag flag"</em>, <em>"four occupation zones"</em>, <em>"wall from 1961 to 1989"</em>, <em>"Iron Curtain symbol"</em> — all point to <strong>Berlin</strong>.`,
+    quiz:{
+      question:"What famous wall, standing from 1961 to 1989, divided a German capital city and symbolized the Iron Curtain?",
+      choices:["Hadrian's Wall","Great Wall of China","Berlin Wall","Maginot Line"],
+      correct:2,
+      explanation:"The Berlin Wall divided East and West Berlin for 28 years. It became the most powerful symbol of the Cold War divide between communism and democracy."
+    }
+  }
+},
+// ─── Topic 3: Muhammad ───
+{
+  id:"d1t3", name:"Muhammad", era:"Medieval", icon:"☪️",
+  accept:[],
+  facts:[
+    "This commander's troops fended off a far larger besieging army in the Battle of the Trench.",
+    "This man defeated a coalition of Meccan tribes at the Battle of Badr in 624 CE with only 313 followers.",
+    "This figure's night journey, known as the Isra and Mi'raj, is commemorated in Islamic tradition.",
+    "After being persecuted in Mecca, this leader's migration to Medina in 622 CE marks the start of the Islamic calendar.",
+    "This founder of Islam received divine revelations compiled in the Quran over a period of 23 years."
+  ],
+  funFact:"Muhammad's migration from Mecca to Medina in 622 CE, called the Hijra, was so important that it became Year 1 of the Islamic calendar. That's like how we count years from the birth of Jesus in the Western calendar.",
+  lecture:{
+    intro:{
+      title:"Muhammad: Founder of Islam",
+      body:`<span class="person">Muhammad</span> is the founder of <span class="keyword">Islam</span>, one of the world's largest religions with nearly 2 billion followers today. He was born around <span class="date">570 CE</span> in the city of <span class="place">Mecca</span> (in present-day Saudi Arabia).<br><br>According to Islamic tradition, Muhammad began receiving <strong>divine revelations</strong> from God (Allah) at age 40. These revelations were delivered by the angel Gabriel and were eventually compiled into the <span class="keyword">Quran</span>, Islam's holy book, over a period of <strong>23 years</strong>.`
+    },
+    details:{
+      title:"From Mecca to Medina",
+      body:`Muhammad's teachings about one God threatened the powerful leaders of <span class="place">Mecca</span>, who worshipped many idols. After years of persecution, Muhammad and his followers made a crucial migration to <span class="place">Medina</span> in <span class="date">622 CE</span>. This journey is called the <span class="keyword">Hijra</span>, and it was so important that it marks <strong>Year 1</strong> of the Islamic calendar.<br><br>In Medina, Muhammad became both a religious and political leader. With only <strong>313 followers</strong>, he won the <span class="keyword">Battle of Badr</span> in <span class="date">624 CE</span> against a much larger Meccan army. He also defended Medina in the <span class="keyword">Battle of the Trench</span>, where his troops dug a trench to stop a massive besieging force.<br><br>Islamic tradition also records his miraculous <span class="keyword">Night Journey (Isra and Mi'raj)</span>, in which he traveled from Mecca to Jerusalem and then to heaven in a single night.`
+    },
+    keyFacts:[
+      "Quran — compiled over 23 years from Muhammad's divine revelations",
+      "Hijra (622 CE) — migration from Mecca to Medina; Year 1 of the Islamic calendar",
+      "Battle of Badr (624 CE) — 313 followers defeated a larger Meccan army",
+      "Battle of the Trench — defended Medina against a massive siege",
+      "Isra and Mi'raj — the miraculous Night Journey to Jerusalem and heaven"
+    ],
+    bowlTip:`Listen for: <em>"Battle of Badr"</em>, <em>"Battle of the Trench"</em>, <em>"Hijra to Medina"</em>, <em>"Isra and Mi'raj"</em>, <em>"Quran revelations"</em>, or <em>"313 followers"</em>. All point to <strong>Muhammad</strong>.`,
+    quiz:{
+      question:"What is the name of Muhammad's migration from Mecca to Medina in 622 CE, which marks the start of the Islamic calendar?",
+      choices:["Hajj","Hijra","Jihad","Isra"],
+      correct:1,
+      explanation:"The Hijra (migration) from Mecca to Medina in 622 CE is so important in Islam that it became Year 1 of the Islamic calendar. The Hajj is the pilgrimage, and the Isra is the Night Journey."
+    }
+  }
+},
+// ─── Topic 4: Abu Bakr as-Siddiq ───
+{
+  id:"d1t4", name:"Abu Bakr as-Siddiq", era:"Medieval", icon:"👑",
+  accept:[],
+  facts:[
+    "This man served as a guard during the Battle of the Trench and the Battle of Badr.",
+    "He was one of the first converts to Islam and accompanied Muhammad during the Hijra to Medina.",
+    "This leader launched the Ridda Wars to reunify Arabia after the death of Muhammad.",
+    "He was the father-in-law of Muhammad through his daughter Aisha.",
+    "This first Rashidun Caliph ruled for only two years (632-634 CE) before his death."
+  ],
+  funFact:"Abu Bakr was Muhammad's closest companion and father-in-law. Despite ruling for only 2 years, he held the newly formed Islamic state together during its most dangerous period.",
+  lecture:{
+    intro:{
+      title:"Abu Bakr: The First Caliph",
+      body:`When the Prophet <span class="person">Muhammad</span> died in <span class="date">632 CE</span>, the young Islamic community faced a crisis: who would lead them? The answer was <span class="person">Abu Bakr as-Siddiq</span>, Muhammad's closest friend and one of the very <strong>first converts to Islam</strong>.<br><br>Abu Bakr became the first <span class="keyword">Rashidun Caliph</span> (the "Rightly Guided" caliphs). He was also Muhammad's <strong>father-in-law</strong> — his daughter <span class="person">Aisha</span> had married Muhammad. Abu Bakr had been by Muhammad's side from the very beginning, even accompanying him during the <span class="keyword">Hijra</span> (migration to Medina).`
+    },
+    details:{
+      title:"The Ridda Wars",
+      body:`Abu Bakr's biggest challenge came immediately. When Muhammad died, many Arab tribes decided they no longer needed to follow Islam or pay taxes to the central government. This rebellion is called the <span class="keyword">Ridda Wars</span> (Wars of Apostasy).<br><br>Abu Bakr firmly insisted that Arabia must remain united under Islam. He sent military campaigns across the Arabian Peninsula and successfully brought all the rebellious tribes back under control. This was absolutely crucial — without his decisive action, Islam might have collapsed as a political force.<br><br>He also fought alongside Muhammad at the <span class="keyword">Battle of Badr</span> and the <span class="keyword">Battle of the Trench</span>. Despite all his accomplishments, he ruled for only <span class="date">two years (632-634 CE)</span> before his death.`
+    },
+    keyFacts:[
+      "First Rashidun Caliph — ruled 632-634 CE (only 2 years)",
+      "One of the first converts to Islam; accompanied Muhammad on the Hijra",
+      "Father-in-law of Muhammad (through daughter Aisha)",
+      "Ridda Wars — crushed rebellions to reunify Arabia after Muhammad's death",
+      "Fought at the Battle of Badr and the Battle of the Trench"
+    ],
+    bowlTip:`Key triggers: <em>"first Rashidun Caliph"</em>, <em>"Ridda Wars"</em>, <em>"father-in-law through Aisha"</em>, <em>"ruled only two years"</em>, <em>"first convert"</em>. Buzz with <strong>Abu Bakr as-Siddiq</strong>.`,
+    quiz:{
+      question:"Who was the first Rashidun Caliph who launched the Ridda Wars to reunify Arabia after Muhammad's death?",
+      choices:["Umar","Ali","Abu Bakr as-Siddiq","Uthman"],
+      correct:2,
+      explanation:"Abu Bakr as-Siddiq was Muhammad's closest companion and the first of the four 'Rightly Guided' caliphs. He ruled for just 2 years but saved the unity of the Islamic state."
+    }
+  }
+},
+// ─── Topic 5: World War I ───
+{
+  id:"d1t5", name:"World War I", era:"World Wars", icon:"💥",
+  accept:["the Great War","the War to End All Wars"],
+  facts:[
+    "This war coincided with the Dada movement in art, born from disillusionment with the conflict.",
+    "The assassination of Archduke Franz Ferdinand in Sarajevo triggered the start of this global conflict.",
+    "Trench warfare along the Western Front characterized much of the fighting in this conflict from 1914-1918.",
+    "The Treaty of Versailles imposed harsh reparations on Germany after this war ended in 1918.",
+    "This 'Great War' introduced tanks, poison gas, and aerial combat as new forms of warfare."
+  ],
+  funFact:"World War I was supposed to be 'the war to end all wars.' It introduced horrifying new weapons like poison gas and tanks. Sadly, the harsh Treaty of Versailles planted the seeds for World War II just 21 years later.",
+  lecture:{
+    intro:{
+      title:"World War I: The Great War",
+      body:`<span class="keyword">World War I</span> (<span class="date">1914-1918</span>) was the first truly global conflict. Before it happened, people called wars by names like "the Franco-Prussian War." This one was so massive that people simply called it <strong>"The Great War"</strong> — they couldn't imagine anything bigger.<br><br>It all started with a single gunshot. On <span class="date">June 28, 1914</span>, a Serbian nationalist named <span class="person">Gavrilo Princip</span> assassinated <span class="person">Archduke Franz Ferdinand</span> of Austria-Hungary in <span class="place">Sarajevo</span>. Because of a complex web of alliances, this one assassination dragged nearly all of Europe into war within weeks.`
+    },
+    details:{
+      title:"Trenches, Technology, and Treaties",
+      body:`The war became famous for <span class="keyword">trench warfare</span> along the <span class="keyword">Western Front</span> in France and Belgium. Soldiers lived in muddy ditches, and gaining even a few hundred meters could cost thousands of lives.<br><br>WWI introduced terrible new weapons: <strong>poison gas</strong> (chlorine and mustard gas), <strong>tanks</strong> (first used by the British at the Battle of the Somme), and <strong>aerial combat</strong> with fighter planes. The <span class="keyword">Dada movement</span> in art was born from artists' horror and disillusionment with this senseless destruction.<br><br>The war ended on <span class="date">November 11, 1918</span>. The <span class="keyword">Treaty of Versailles</span> imposed extremely harsh punishments on Germany — they had to pay massive <strong>reparations</strong> (money for damages), give up territory, and accept full blame for the war. These humiliating terms would later fuel the rise of Hitler and World War II.`
+    },
+    keyFacts:[
+      "Assassination of Archduke Franz Ferdinand in Sarajevo (June 28, 1914) — triggered the war",
+      "Trench warfare on the Western Front — defined the fighting",
+      "New weapons: poison gas, tanks, aerial combat",
+      "Dada movement — art movement born from disillusionment with WWI",
+      "Treaty of Versailles (1918) — harsh reparations on Germany"
+    ],
+    bowlTip:`Listen for: <em>"Franz Ferdinand assassination"</em>, <em>"trench warfare"</em>, <em>"Western Front"</em>, <em>"Treaty of Versailles"</em>, <em>"Dada movement"</em>, <em>"Great War"</em>. All point to <strong>World War I</strong>. Also accept: "The Great War" or "The War to End All Wars."`,
+    quiz:{
+      question:"Whose assassination in Sarajevo in 1914 triggered the start of World War I?",
+      choices:["Kaiser Wilhelm II","Archduke Franz Ferdinand","Tsar Nicholas II","King George V"],
+      correct:1,
+      explanation:"Archduke Franz Ferdinand of Austria-Hungary was assassinated by Gavrilo Princip in Sarajevo on June 28, 1914. This event set off a chain reaction of alliances that plunged Europe into war."
+    }
+  }
+},
+// ─── Topic 6: 1952 ───
+{
+  id:"d1t6", name:"1952", era:"Cold War", icon:"📅",
+  accept:[],
+  facts:[
+    "In this year, Eisenhower won the presidential election, 60 years before Obama's second term.",
+    "Elizabeth II became Queen of the United Kingdom in this year following her father's death.",
+    "The hydrogen bomb was first tested by the United States at Enewetak Atoll in this year.",
+    "The Mau Mau Uprising against British colonial rule began in Kenya in this year.",
+    "This year saw the founding of the National Security Agency (NSA) in the United States."
+  ],
+  funFact:"1952 was a year packed with world-changing events. Queen Elizabeth II started her 70-year reign, the US tested a bomb 1000x more powerful than Hiroshima, and the NSA was secretly created.",
+  lecture:{
+    intro:{
+      title:"1952: A Year of World Change",
+      body:`Sometimes in History Bowl, you'll be asked to identify a specific <strong>year</strong> based on clues. <span class="date">1952</span> is one of the most question-worthy years because so many important things happened at once.<br><br>In <span class="place">the United Kingdom</span>, <span class="person">King George VI</span> died, and his daughter became <span class="person">Queen Elizabeth II</span>. She would go on to reign for <strong>70 years</strong> — the longest reign in British history! Meanwhile, in the United States, war hero <span class="person">Dwight D. Eisenhower</span> won the presidential election.`
+    },
+    details:{
+      title:"Bombs, Spies, and Rebellion",
+      body:`One of the most terrifying events of <span class="date">1952</span> was the first test of a <span class="keyword">hydrogen bomb</span> by the United States at <span class="place">Enewetak Atoll</span> in the Pacific Ocean. The H-bomb was roughly <strong>1,000 times more powerful</strong> than the atomic bomb dropped on Hiroshima. This escalated the nuclear arms race with the Soviet Union.<br><br>Also in 1952, the U.S. government secretly created the <span class="keyword">National Security Agency (NSA)</span>, a spy organization focused on signals intelligence and code-breaking. Its existence was so secret that people joked NSA stood for "No Such Agency."<br><br>In <span class="place">Kenya</span>, the <span class="keyword">Mau Mau Uprising</span> began — a rebellion by native Kenyans against <strong>British colonial rule</strong>. This was part of the larger wave of decolonization sweeping Africa.`
+    },
+    keyFacts:[
+      "Eisenhower elected president of the United States",
+      "Elizabeth II becomes Queen of the United Kingdom (after George VI's death)",
+      "First hydrogen bomb tested at Enewetak Atoll (Pacific Ocean)",
+      "National Security Agency (NSA) founded — secret spy agency",
+      "Mau Mau Uprising begins in Kenya against British colonial rule"
+    ],
+    bowlTip:`Year questions are tricky! Listen for combinations: <em>"Eisenhower elected"</em> + <em>"Elizabeth became Queen"</em> + <em>"hydrogen bomb test"</em> + <em>"NSA founded"</em>. If you hear ANY two of these together, buzz <strong>1952</strong>.`,
+    quiz:{
+      question:"In what year did Eisenhower win the presidential election, Elizabeth II become Queen, and the first hydrogen bomb get tested?",
+      choices:["1948","1950","1952","1956"],
+      correct:2,
+      explanation:"1952 was packed with historic events: Eisenhower's election, Elizabeth II's accession, the H-bomb test at Enewetak Atoll, the founding of the NSA, and the Mau Mau Uprising in Kenya."
+    }
+  }
+},
+// ─── Topic 7: Richard Nixon ───
+{
+  id:"d1t7", name:"Richard Nixon", era:"Cold War", icon:"🎤",
+  accept:[],
+  facts:[
+    "Vice President under Eisenhower who later resigned from the presidency in disgrace.",
+    "This president established the Environmental Protection Agency and opened diplomatic relations with China.",
+    "His 'enemies list' and paranoid political style were revealed during Senate hearings.",
+    "The Watergate scandal forced this president to resign in August 1974 to avoid impeachment.",
+    "This 37th US President is famous for saying 'I am not a crook' during a press conference."
+  ],
+  funFact:"Nixon is the only US president to ever resign. Ironically, he won re-election in 1972 by one of the biggest landslides in history — he didn't even need to cheat!",
+  lecture:{
+    intro:{
+      title:"Richard Nixon: From Power to Disgrace",
+      body:`<span class="person">Richard Nixon</span> is one of the most complex figures in American history. He served as Vice President under <span class="person">Eisenhower</span> in the 1950s, lost the presidential election to JFK in 1960, and then made a remarkable comeback to become the <strong>37th President</strong> in <span class="date">1968</span>.<br><br>Nixon actually achieved some impressive things. He established the <span class="keyword">Environmental Protection Agency (EPA)</span>, which still protects the environment today. He also made a historic visit to <span class="place">China</span> in <span class="date">1972</span>, opening diplomatic relations with a country the US hadn't spoken to in decades.`
+    },
+    details:{
+      title:"Watergate: The Fall of a President",
+      body:`Everything came crashing down with the <span class="keyword">Watergate scandal</span>. In <span class="date">1972</span>, burglars connected to Nixon's re-election campaign broke into the <span class="place">Watergate</span> hotel complex (Democratic Party headquarters) to plant listening devices. When the break-in was discovered, Nixon tried to cover it up.<br><br>Senate hearings revealed Nixon had an <span class="keyword">"enemies list"</span> and a deeply paranoid style. Secret White House recordings proved he had been involved in the cover-up. His famous denial — <em>"I am not a crook"</em> — became one of the most ironic quotes in presidential history.<br><br>Facing almost certain <span class="keyword">impeachment</span> (removal from office by Congress), Nixon resigned on <span class="date">August 9, 1974</span>. He is the <strong>only US president ever to resign</strong>.`
+    },
+    keyFacts:[
+      "37th US President — served as VP under Eisenhower first",
+      "Created the EPA; opened relations with China (1972)",
+      "Watergate scandal — burglars caught at Democratic headquarters",
+      "\"I am not a crook\" — his famous (ironic) denial",
+      "Resigned August 9, 1974 — only president to ever resign"
+    ],
+    bowlTip:`Instant buzz triggers: <em>"Watergate"</em>, <em>"I am not a crook"</em>, <em>"only president to resign"</em>, <em>"enemies list"</em>. If you hear <em>"EPA + China visit"</em>, also think Nixon. Buzz: <strong>Richard Nixon</strong>.`,
+    quiz:{
+      question:"Which US president resigned in August 1974 due to the Watergate scandal?",
+      choices:["Lyndon Johnson","Gerald Ford","Richard Nixon","Jimmy Carter"],
+      correct:2,
+      explanation:"Richard Nixon resigned on August 9, 1974, to avoid impeachment over the Watergate cover-up. Gerald Ford, his VP, became president and later pardoned Nixon."
+    }
+  }
+},
+// ─── Topic 8: Military-Industrial Complex ───
+{
+  id:"d1t8", name:"Military-Industrial Complex", era:"Cold War", icon:"🏭",
+  accept:[],
+  facts:[
+    "Eisenhower warned against this entity's 'unwarranted influence' in his 1961 farewell address.",
+    "This term describes the relationship between a nation's military and the defense industry that supplies it.",
+    "The concept emerged from Cold War-era massive defense spending that created powerful lobbying interests.",
+    "Critics argue this system perpetuates conflicts to maintain profits for weapons manufacturers.",
+    "Dwight D. Eisenhower, a former five-star general, coined this famous two-word warning term."
+  ],
+  funFact:"What makes Eisenhower's warning so powerful is WHO said it. He wasn't an anti-war protester — he was a five-star general who led D-Day! When a military legend warns about military power, people listen.",
+  lecture:{
+    intro:{
+      title:"The Military-Industrial Complex",
+      body:`In <span class="date">January 1961</span>, President <span class="person">Dwight D. Eisenhower</span> gave one of the most famous farewell speeches in American history. In it, he warned Americans about the growing power of something he called the <span class="keyword">military-industrial complex</span>.<br><br>What makes this warning so remarkable is <strong>who said it</strong>. Eisenhower wasn't some anti-war activist — he was a <strong>five-star general</strong> who had commanded all Allied forces on D-Day! When a military hero warns about the military having too much power, you know it's serious.`
+    },
+    details:{
+      title:"What Is It and Why Does It Matter?",
+      body:`The <span class="keyword">military-industrial complex</span> refers to the cozy relationship between a country's <strong>military</strong>, the <strong>defense industry</strong> (weapons manufacturers like Lockheed Martin, Boeing, etc.), and <strong>politicians</strong> who approve military budgets.<br><br>During the <span class="keyword">Cold War</span>, the US spent enormous amounts of money on weapons, missiles, and military technology to compete with the Soviet Union. This created huge companies that made billions from defense contracts. These companies then <strong>lobbied</strong> (pressured) politicians to keep military spending high.<br><br>Eisenhower warned that this cycle could give these groups <em>"unwarranted influence"</em> over government decisions — essentially, that the country might go to war not because it was necessary, but because it was profitable for weapons makers.`
+    },
+    keyFacts:[
+      "Coined by Eisenhower in his 1961 farewell address",
+      "Eisenhower was a five-star general and D-Day commander — giving extra weight to his warning",
+      "Describes the relationship between military, defense industry, and politicians",
+      "Warned of 'unwarranted influence' over government policy",
+      "Emerged from massive Cold War defense spending"
+    ],
+    bowlTip:`If you hear <em>"Eisenhower's farewell address"</em>, <em>"unwarranted influence"</em>, <em>"defense industry relationship"</em>, or <em>"five-star general warning about military"</em>, buzz: <strong>military-industrial complex</strong>.`,
+    quiz:{
+      question:"In his 1961 farewell address, which president warned about the 'unwarranted influence' of the military-industrial complex?",
+      choices:["Harry Truman","John F. Kennedy","Dwight Eisenhower","Richard Nixon"],
+      correct:2,
+      explanation:"Eisenhower, a former five-star general, coined the term 'military-industrial complex' in his farewell speech, warning about the dangerous relationship between the military and weapons manufacturers."
+    }
+  }
+},
+// ─── Topic 9: NASA ───
+{
+  id:"d1t9", name:"NASA", era:"Cold War", icon:"🚀",
+  accept:[],
+  facts:[
+    "Eisenhower authorized the establishment of this organization that participated in the space race.",
+    "This agency was founded in 1958, partly in response to the Soviet launch of Sputnik.",
+    "The Mercury, Gemini, and Apollo programs were all managed by this American space agency.",
+    "This organization achieved Kennedy's goal of landing a man on the moon in July 1969.",
+    "The National Aeronautics and Space Administration is the full name of this US agency."
+  ],
+  funFact:"When the Soviet Union launched Sputnik in 1957, Americans panicked — the Soviets were winning the space race! NASA was created the very next year. Just 11 years later, NASA put humans on the moon.",
+  lecture:{
+    intro:{
+      title:"NASA: Racing to the Stars",
+      body:`In <span class="date">1957</span>, the <span class="place">Soviet Union</span> shocked the world by launching <span class="keyword">Sputnik</span>, the first artificial satellite, into orbit. Americans were terrified — if the Soviets could put something in space, they could put nuclear weapons there too!<br><br>In response, President <span class="person">Eisenhower</span> authorized the creation of <span class="keyword">NASA</span> (the <strong>National Aeronautics and Space Administration</strong>) in <span class="date">1958</span>. This began the <span class="keyword">Space Race</span> — an intense competition between the US and USSR to achieve milestones in space exploration.`
+    },
+    details:{
+      title:"Mercury, Gemini, Apollo — To the Moon!",
+      body:`NASA ran three major programs in sequence:<br><br><span class="keyword">Mercury</span> (<span class="date">1958-1963</span>) — America's first manned spaceflight program. <span class="person">Alan Shepard</span> became the first American in space, and <span class="person">John Glenn</span> became the first American to orbit Earth.<br><br><span class="keyword">Gemini</span> (<span class="date">1965-1966</span>) — Practiced skills needed for a moon landing: spacewalks, docking two spacecraft together, and longer missions.<br><br><span class="keyword">Apollo</span> (<span class="date">1967-1972</span>) — The grand finale! President <span class="person">Kennedy</span> had declared in 1961 that America would put a man on the moon before the decade ended. On <span class="date">July 20, 1969</span>, <span class="person">Neil Armstrong</span> stepped onto the lunar surface during <strong>Apollo 11</strong>, famously saying, <em>"That's one small step for man, one giant leap for mankind."</em>`
+    },
+    keyFacts:[
+      "Founded in 1958 by Eisenhower, in response to Sputnik (1957)",
+      "Full name: National Aeronautics and Space Administration",
+      "Mercury program — first American astronauts in space",
+      "Gemini program — practiced spacewalks and docking",
+      "Apollo 11 (July 20, 1969) — first humans on the moon (Neil Armstrong)"
+    ],
+    bowlTip:`Triggers: <em>"Sputnik response"</em>, <em>"Mercury/Gemini/Apollo"</em>, <em>"moon landing 1969"</em>, <em>"Eisenhower authorized"</em>, <em>"National Aeronautics and Space Administration"</em>. Buzz: <strong>NASA</strong>.`,
+    quiz:{
+      question:"What US agency, founded in 1958, managed the Apollo program that landed humans on the moon in 1969?",
+      choices:["CIA","NSA","NASA","DARPA"],
+      correct:2,
+      explanation:"NASA (National Aeronautics and Space Administration) was created in 1958 in response to Sputnik. It managed Mercury, Gemini, and Apollo, achieving the moon landing on July 20, 1969."
+    }
+  }
+},
+// ─── Topic 10: Alaska & Hawaii ───
+{
+  id:"d1t10", name:"Alaska; Hawaii", era:"Cold War", icon:"🗺️",
+  accept:[],
+  facts:[
+    "These two territories were admitted as the 49th and 50th US states in 1959.",
+    "One was purchased from Russia in 1867 for $7.2 million, called 'Seward's Folly.'",
+    "The other was an independent kingdom until 1893 when American planters overthrew Queen Liliuokalani.",
+    "Both of these states are geographically separated from the contiguous United States.",
+    "These were the last two territories admitted to the United States as states."
+  ],
+  funFact:"Alaska was bought from Russia for just $7.2 million in 1867 — about 2 cents per acre! People mocked the purchase as 'Seward's Folly,' but Alaska turned out to be rich in oil, gold, and natural resources.",
+  lecture:{
+    intro:{
+      title:"Alaska and Hawaii: The 49th and 50th States",
+      body:`Did you know the United States didn't always have 50 states? <span class="place">Alaska</span> and <span class="place">Hawaii</span> were the last two territories admitted as states, both in <span class="date">1959</span>. They're also the only two states that are <strong>geographically separated</strong> from the rest of the country (the "contiguous" 48 states).<br><br>These two states have very different origin stories, and History Bowl loves to ask about both of them!`
+    },
+    details:{
+      title:"Seward's Folly and a Overthrown Queen",
+      body:`<strong>Alaska:</strong> In <span class="date">1867</span>, Secretary of State <span class="person">William Seward</span> purchased Alaska from <span class="place">Russia</span> for just <strong>$7.2 million</strong> — about 2 cents per acre! Americans thought this was ridiculous and mocked the deal as <span class="keyword">"Seward's Folly"</span> or "Seward's Icebox." But the joke was on the critics: Alaska turned out to be incredibly rich in gold, oil, and natural resources.<br><br><strong>Hawaii:</strong> Hawaii was an independent <strong>kingdom</strong> ruled by native Hawaiian royalty. In <span class="date">1893</span>, American sugar planters — with the support of US Marines — overthrew <span class="person">Queen Liliuokalani</span>, the last Hawaiian monarch. Hawaii was annexed by the US in 1898 and became the 50th state in <span class="date">1959</span>.`
+    },
+    keyFacts:[
+      "Both admitted as states in 1959 — Alaska (49th), Hawaii (50th)",
+      "Alaska purchased from Russia in 1867 for $7.2 million ('Seward's Folly')",
+      "Hawaii was an independent kingdom; Queen Liliuokalani overthrown in 1893",
+      "Both are geographically separated from the contiguous US",
+      "Last two territories admitted to the United States"
+    ],
+    bowlTip:`Key triggers: <em>"49th and 50th states"</em>, <em>"Seward's Folly"</em>, <em>"purchased from Russia for $7.2 million"</em>, <em>"Queen Liliuokalani overthrown"</em>, <em>"not contiguous"</em>. Buzz: <strong>Alaska and Hawaii</strong>.`,
+    quiz:{
+      question:"Which US state was purchased from Russia in 1867 in a deal mocked as 'Seward's Folly'?",
+      choices:["Hawaii","Alaska","Oregon","Texas"],
+      correct:1,
+      explanation:"Secretary of State William Seward purchased Alaska from Russia for $7.2 million in 1867. Critics called it 'Seward's Folly' until gold and oil were discovered there."
+    }
+  }
+},
+// ─── Topic 11: Oslo Accords ───
+{
+  id:"d1t11", name:"Oslo Accords", era:"Modern World", icon:"🕊️",
+  accept:[],
+  facts:[
+    "Yitzhak Rabin, Yasser Arafat, and Shimon Peres shared the Nobel Peace Prize for this agreement.",
+    "These 1993 agreements established the Palestinian Authority for limited self-governance.",
+    "Secret negotiations in Norway produced this landmark Israeli-Palestinian peace framework.",
+    "The famous handshake between Rabin and Arafat at the White House followed these accords.",
+    "Named after the Norwegian capital where secret talks were held, these accords aimed for Middle East peace."
+  ],
+  funFact:"The famous handshake between enemies Rabin and Arafat at the White House was orchestrated by President Clinton. Rabin reportedly said, 'Enough of blood and tears. Enough.' Sadly, Rabin was assassinated in 1995.",
+  lecture:{
+    intro:{
+      title:"The Oslo Accords: A Hope for Peace",
+      body:`The conflict between <span class="place">Israel</span> and the <span class="keyword">Palestinians</span> has been one of the most difficult problems in modern history. For decades, these two peoples fought over the same land. But in <span class="date">1993</span>, something remarkable happened: secret peace talks produced the <span class="keyword">Oslo Accords</span>.<br><br>Why "Oslo"? Because the secret negotiations took place in <span class="place">Oslo, Norway</span> — far from the conflict zone, where both sides could talk privately without media pressure.`
+    },
+    details:{
+      title:"The Handshake That Shook the World",
+      body:`The Oslo Accords brought together two bitter enemies: Israeli Prime Minister <span class="person">Yitzhak Rabin</span> and PLO (Palestine Liberation Organization) Chairman <span class="person">Yasser Arafat</span>. The agreements established the <span class="keyword">Palestinian Authority</span>, giving Palestinians limited self-governance over parts of the West Bank and Gaza Strip for the first time.<br><br>The most iconic moment came when Rabin and Arafat shook hands at the <span class="place">White House</span> in Washington, D.C., with President <span class="person">Bill Clinton</span> standing between them, arms outstretched. This image became a symbol of hope for peace.<br><br><span class="person">Rabin</span>, <span class="person">Arafat</span>, and <span class="person">Shimon Peres</span> (Israel's foreign minister) shared the <span class="keyword">Nobel Peace Prize</span> in <span class="date">1994</span>. Tragically, Rabin was assassinated by an Israeli extremist in <span class="date">1995</span>, and the peace process stalled.`
+    },
+    keyFacts:[
+      "1993 agreements — secret negotiations held in Oslo, Norway",
+      "Established the Palestinian Authority for limited self-governance",
+      "Famous Rabin-Arafat handshake at the White House (Clinton as mediator)",
+      "Nobel Peace Prize 1994 — Rabin, Arafat, and Shimon Peres",
+      "Rabin assassinated in 1995 — peace process stalled"
+    ],
+    bowlTip:`Listen for: <em>"secret talks in Norway"</em>, <em>"Rabin and Arafat handshake"</em>, <em>"Palestinian Authority created"</em>, <em>"Nobel Peace Prize shared by three"</em>, <em>"Norwegian capital"</em>. Buzz: <strong>Oslo Accords</strong>.`,
+    quiz:{
+      question:"What 1993 peace agreements, negotiated secretly in Norway, led to a famous handshake between Rabin and Arafat?",
+      choices:["Camp David Accords","Oslo Accords","Dayton Agreement","Good Friday Agreement"],
+      correct:1,
+      explanation:"The Oslo Accords (1993) were the result of secret talks in Oslo, Norway. They created the Palestinian Authority and led to the Nobel Peace Prize for Rabin, Arafat, and Peres."
+    }
+  }
+},
+// ─── Topic 12: Pearl Harbor ───
+{
+  id:"d1t12", name:"Pearl Harbor", era:"World Wars", icon:"💥",
+  accept:[],
+  facts:[
+    "Admiral Isoroku Yamamoto planned this surprise military strike that used six aircraft carriers.",
+    "The USS Arizona Memorial commemorates 1,177 sailors who died when this battleship sank during the attack.",
+    "President Roosevelt declared December 7, 1941 'a date which will live in infamy' after this event.",
+    "This attack destroyed much of the US Pacific Fleet but missed the aircraft carriers that were at sea.",
+    "Japan's surprise attack on this Hawaiian naval base drew the United States into World War II."
+  ],
+  funFact:"Japan's Admiral Yamamoto actually opposed the war with America. He said, 'I can run wild for six months... but I have utterly no confidence for the second or third year.' He was right — Japan lost.",
+  lecture:{
+    intro:{
+      title:"Pearl Harbor: A Date Which Will Live in Infamy",
+      body:`On the morning of <span class="date">December 7, 1941</span>, the United States was not at war. By that afternoon, everything had changed. <span class="place">Japan</span> launched a devastating surprise attack on the American naval base at <span class="place">Pearl Harbor</span>, <span class="place">Hawaii</span>, drawing the US into <span class="keyword">World War II</span>.<br><br>The attack was planned by Admiral <span class="person">Isoroku Yamamoto</span>, using a fleet of <strong>six aircraft carriers</strong>. Japanese planes swept in from the sea in two waves, bombing battleships, airfields, and everything in sight.`
+    },
+    details:{
+      title:"Destruction and Response",
+      body:`The attack was devastating. The <span class="keyword">USS Arizona</span> was hit by a bomb that penetrated its ammunition magazine and exploded, killing <strong>1,177 sailors</strong> — nearly half of all Americans who died that day. The ship sank in minutes and still lies on the harbor floor today as a memorial.<br><br>In total, <strong>2,403 Americans</strong> were killed and much of the US Pacific Fleet was destroyed. However, crucially, the <strong>aircraft carriers</strong> were out at sea and were untouched — they would become the key weapons of the Pacific War.<br><br>The next day, President <span class="person">Franklin D. Roosevelt</span> asked Congress to declare war, calling December 7th <em>"a date which will live in infamy."</em> Congress declared war on Japan almost unanimously, with only one dissenting vote.`
+    },
+    keyFacts:[
+      "December 7, 1941 — Japan's surprise attack on Pearl Harbor, Hawaii",
+      "Admiral Yamamoto planned the attack using six aircraft carriers",
+      "USS Arizona sank — 1,177 sailors killed (memorial still exists)",
+      "FDR called it 'a date which will live in infamy'",
+      "Drew the United States into World War II; carriers survived"
+    ],
+    bowlTip:`Instant buzz triggers: <em>"a date which will live in infamy"</em>, <em>"USS Arizona"</em>, <em>"Admiral Yamamoto"</em>, <em>"six aircraft carriers"</em>, <em>"December 7, 1941"</em>, <em>"Hawaiian naval base"</em>. Answer: <strong>Pearl Harbor</strong>.`,
+    quiz:{
+      question:"What did President Roosevelt call December 7, 1941, the day Japan attacked a US naval base in Hawaii?",
+      choices:["A day of great sorrow","A date which will live in infamy","The darkest day in our history","The beginning of the end"],
+      correct:1,
+      explanation:"Roosevelt's famous phrase 'a date which will live in infamy' referred to the surprise attack on Pearl Harbor, which killed 2,403 Americans and brought the US into WWII."
+    }
+  }
+},
+// ─── Topic 13: Theodore Roosevelt ───
+{
+  id:"d1t13", name:"Theodore 'Teddy' Roosevelt", era:"19th Century", icon:"🇺🇸",
+  accept:["Teddy Roosevelt","T. Roosevelt"],
+  facts:[
+    "This president led the Rough Riders cavalry regiment during the Spanish-American War.",
+    "He established the US Forest Service and created five national parks during his presidency.",
+    "After being shot during a campaign speech in 1912, he continued speaking for 90 minutes.",
+    "He won the Nobel Peace Prize in 1906 for mediating the end of the Russo-Japanese War.",
+    "This 26th US President was known for his 'Big Stick' foreign policy and trust-busting reforms."
+  ],
+  funFact:"After being shot in the chest before a speech in 1912, Roosevelt checked the wound and said, 'It takes more than that to kill a Bull Moose!' He then spoke for 90 minutes before going to the hospital.",
+  lecture:{
+    intro:{
+      title:"Teddy Roosevelt: The Toughest President",
+      body:`<span class="person">Theodore "Teddy" Roosevelt</span> was the <strong>26th President</strong> of the United States and arguably the most energetic, adventurous person ever to hold the office. Before becoming president, he was a rancher, a police commissioner, a soldier, and an author.<br><br>During the <span class="keyword">Spanish-American War</span> of <span class="date">1898</span>, Roosevelt personally led a cavalry regiment called the <span class="keyword">Rough Riders</span> in a famous charge up San Juan Hill in Cuba. This made him a national hero and helped launch his political career.`
+    },
+    details:{
+      title:"Big Stick, Trust-Busting, and a Nobel Prize",
+      body:`As president (<span class="date">1901-1909</span>), Roosevelt was famous for his <span class="keyword">"Big Stick" foreign policy</span> — the idea that the US should "speak softly and carry a big stick" (meaning: be polite, but have a strong military ready). He greatly expanded American influence around the world.<br><br>Domestically, he was a <span class="keyword">"trust-buster"</span> — breaking up giant monopolies (huge companies that controlled entire industries unfairly). He also loved nature and established the <strong>US Forest Service</strong>, creating <strong>five national parks</strong> and protecting millions of acres of wilderness.<br><br>In <span class="date">1906</span>, he won the <span class="keyword">Nobel Peace Prize</span> for mediating the end of the <span class="keyword">Russo-Japanese War</span> — making him the first American to win a Nobel Prize.<br><br>Perhaps the most incredible Teddy Roosevelt story: in <span class="date">1912</span>, while campaigning for president again, <strong>he was shot in the chest</strong>. The bullet was slowed by his folded speech and glasses case. Roosevelt checked the wound, decided it wasn't fatal, and then <strong>gave his 90-minute speech</strong> before going to the hospital!`
+    },
+    keyFacts:[
+      "26th US President — led the Rough Riders in the Spanish-American War",
+      "'Big Stick' foreign policy — 'speak softly and carry a big stick'",
+      "Trust-buster — broke up monopolies; created the US Forest Service",
+      "Nobel Peace Prize (1906) — mediated end of Russo-Japanese War",
+      "Shot in 1912, still gave a 90-minute speech!"
+    ],
+    bowlTip:`Key triggers: <em>"Rough Riders"</em>, <em>"Big Stick"</em>, <em>"trust-buster"</em>, <em>"shot during a speech"</em>, <em>"Nobel Prize for Russo-Japanese War"</em>, <em>"26th president"</em>. Buzz: <strong>Theodore Roosevelt</strong>. Do NOT confuse with FDR (32nd president)!`,
+    quiz:{
+      question:"Which US president led the Rough Riders, was known for 'Big Stick' diplomacy, and continued a speech after being shot?",
+      choices:["Franklin D. Roosevelt","Theodore Roosevelt","Woodrow Wilson","William McKinley"],
+      correct:1,
+      explanation:"Theodore 'Teddy' Roosevelt was the 26th president. He led the Rough Riders, won the Nobel Peace Prize, and famously continued speaking for 90 minutes after being shot in 1912."
+    }
+  }
+},
+// ─── Topic 14: Imperial German Navy ───
+{
+  id:"d1t14", name:"Imperial German Navy", era:"World Wars", icon:"⚓",
+  accept:["Kaiserliche Marine"],
+  facts:[
+    "This military force was dismantled at Scapa Flow on Ludwig von Reuter's orders, hoping that it would not fall into British hands.",
+    "Alfred von Tirpitz revolutionized this military force that included the High Seas Fleet.",
+    "This naval force challenged British naval supremacy in the early 20th century.",
+    "Its expansion was a major cause of tension between Germany and Britain before World War I.",
+    "This was the naval force of the German Empire from 1871 to 1919."
+  ],
+  funFact:"Rather than let the British capture their ships after WWI, the German sailors at Scapa Flow sank their own fleet! 52 of the 74 ships were deliberately scuttled on June 21, 1919.",
+  lecture:{
+    intro:{
+      title:"The Imperial German Navy",
+      body:`In the late 1800s, <span class="place">Great Britain</span> ruled the seas. The <strong>Royal Navy</strong> was the most powerful fleet in the world. But <span class="place">Germany</span>, under <span class="person">Kaiser Wilhelm II</span>, decided to challenge that dominance by building a massive navy of its own — the <span class="keyword">Imperial German Navy</span> (Kaiserliche Marine).<br><br>The man behind this naval build-up was Admiral <span class="person">Alfred von Tirpitz</span>, who convinced the Kaiser to pass a series of Navy Laws dramatically expanding the fleet. This included the <span class="keyword">High Seas Fleet</span>, designed to rival Britain's navy.`
+    },
+    details:{
+      title:"From Rivalry to Scapa Flow",
+      body:`The German naval expansion was one of the <strong>major causes of tension</strong> between Germany and Britain before <span class="keyword">World War I</span>. Britain saw the growing German navy as a direct threat, leading to a naval arms race that increased hostility between the two nations.<br><br>During WWI, the German and British navies clashed at the <span class="keyword">Battle of Jutland</span> (<span class="date">1916</span>) — the largest naval battle of the war. It was inconclusive, and the German fleet largely stayed in port after that.<br><br>After Germany lost WWI, the fleet was interned (held) at <span class="place">Scapa Flow</span> in Scotland. Rather than let the British take their beloved ships, Admiral <span class="person">Ludwig von Reuter</span> ordered the fleet to <span class="keyword">scuttle</span> (deliberately sink) itself on <span class="date">June 21, 1919</span>. <strong>52 of 74 ships</strong> were sunk — one of the most dramatic events in naval history.`
+    },
+    keyFacts:[
+      "Germany's naval force 1871-1919, built to challenge British naval supremacy",
+      "Alfred von Tirpitz — the architect of the naval expansion",
+      "High Seas Fleet — the main battle fleet",
+      "Naval arms race with Britain — a major cause of WWI tensions",
+      "Scuttled at Scapa Flow (June 21, 1919) — rather than surrender to the British"
+    ],
+    bowlTip:`Key triggers: <em>"Scapa Flow"</em>, <em>"Alfred von Tirpitz"</em>, <em>"High Seas Fleet"</em>, <em>"scuttled"</em>, <em>"challenged British naval supremacy"</em>. Buzz: <strong>Imperial German Navy</strong>.`,
+    quiz:{
+      question:"Which navy was deliberately sunk (scuttled) at Scapa Flow in 1919 rather than being surrendered to the British?",
+      choices:["French Navy","Imperial German Navy","Ottoman Navy","Russian Navy"],
+      correct:1,
+      explanation:"The Imperial German Navy was scuttled at Scapa Flow, Scotland, on June 21, 1919. 52 of 74 ships were deliberately sunk by their own crews under Admiral von Reuter's orders."
+    }
+  }
+},
+// ─── Topic 15: Kaiser Wilhelm II ───
+{
+  id:"d1t15", name:"Kaiser Wilhelm II", era:"World Wars", icon:"👑",
+  accept:["Wilhelm II"],
+  facts:[
+    "Alfred von Tirpitz assisted this Kaiser in the expansion of the Imperial German Navy.",
+    "This man abdicated the throne after Germany lost World War I.",
+    "He was Queen Victoria's grandson, creating a complex family connection to British royalty.",
+    "His aggressive foreign policy, including the naval arms race, contributed to the outbreak of WWI.",
+    "This last German Emperor ruled from 1888 until his abdication in November 1918."
+  ],
+  funFact:"Kaiser Wilhelm II was Queen Victoria's GRANDSON. So when Germany fought Britain in WWI, it was literally a family feud — the kings of Britain, Germany, and Russia were all related to each other!",
+  lecture:{
+    intro:{
+      title:"Kaiser Wilhelm II: The Last German Emperor",
+      body:`<span class="person">Kaiser Wilhelm II</span> was the last <span class="keyword">German Emperor</span> (Kaiser = Emperor in German). He ruled <span class="place">Germany</span> from <span class="date">1888</span> to <span class="date">1918</span>, and his aggressive policies helped cause <span class="keyword">World War I</span>.<br><br>Here's a wild fact: Wilhelm was the <strong>grandson of Queen Victoria</strong> of England! This meant that when Germany fought Britain in WWI, it was partly a family feud. In fact, the King of Britain (George V), the Kaiser of Germany (Wilhelm II), and the Tsar of Russia (Nicholas II) were all <strong>related to each other</strong> through Queen Victoria.`
+    },
+    details:{
+      title:"Ambition and Abdication",
+      body:`Wilhelm was obsessed with making Germany a world power. He worked with Admiral <span class="person">Alfred von Tirpitz</span> to massively expand the <span class="keyword">Imperial German Navy</span>, directly challenging British naval supremacy. This <strong>naval arms race</strong> was one of the major factors that increased tensions before World War I.<br><br>His aggressive foreign policy — known as <span class="keyword">Weltpolitik</span> ("world politics") — alarmed other European nations and contributed to the alliance system that made the war so devastating.<br><br>When Germany lost WWI in <span class="date">November 1918</span>, Wilhelm was forced to <span class="keyword">abdicate</span> (give up the throne). He fled to the <span class="place">Netherlands</span>, where he lived in exile until his death in <span class="date">1941</span>. He was the <strong>last ruler of the German Empire</strong>.`
+    },
+    keyFacts:[
+      "Last German Emperor — ruled 1888-1918",
+      "Grandson of Queen Victoria (related to British and Russian royalty!)",
+      "Expanded the Imperial German Navy with Tirpitz — naval arms race",
+      "Aggressive Weltpolitik foreign policy contributed to WWI",
+      "Abdicated November 1918 after Germany lost WWI; exiled to the Netherlands"
+    ],
+    bowlTip:`Listen for: <em>"last German Emperor"</em>, <em>"Queen Victoria's grandson"</em>, <em>"Tirpitz naval expansion"</em>, <em>"abdicated after WWI"</em>, <em>"Weltpolitik"</em>. Buzz: <strong>Kaiser Wilhelm II</strong>.`,
+    quiz:{
+      question:"Which German ruler, Queen Victoria's grandson, abdicated after Germany lost World War I?",
+      choices:["Otto von Bismarck","Kaiser Wilhelm I","Kaiser Wilhelm II","Frederick the Great"],
+      correct:2,
+      explanation:"Kaiser Wilhelm II was the last German Emperor. He was Queen Victoria's grandson, expanded the navy with Tirpitz, and abdicated in November 1918 after Germany's defeat in WWI."
+    }
+  }
+},
+// ─── Topic 16: Mustafa Kemal Ataturk ───
+{
+  id:"d1t16", name:"Mustafa Kemal Ataturk", era:"World Wars", icon:"🇹🇷",
+  accept:["Ataturk","Kemal Ataturk"],
+  facts:[
+    "He defended Gallipoli against Allied invasion, becoming a national hero during World War I.",
+    "He abolished the Ottoman caliphate and sultanate, creating a secular republic in 1923.",
+    "His sweeping reforms included adopting the Latin alphabet and granting women's suffrage.",
+    "He moved the capital from Istanbul to Ankara and imposed Western dress codes.",
+    "This father of modern Turkey founded the Republic of Turkey from the ruins of the Ottoman Empire."
+  ],
+  funFact:"Ataturk literally means 'Father of the Turks' — it was a surname given to him by the Turkish parliament. He transformed Turkey from a medieval empire into a modern secular nation in just 15 years.",
+  lecture:{
+    intro:{
+      title:"Ataturk: Father of Modern Turkey",
+      body:`<span class="person">Mustafa Kemal Ataturk</span> is one of the most transformative leaders of the 20th century. He took the crumbling <span class="keyword">Ottoman Empire</span> — once one of the world's greatest powers but now the "Sick Man of Europe" — and rebuilt it into the modern nation of <span class="place">Turkey</span>.<br><br>During <span class="keyword">World War I</span>, he became a national hero by defending <span class="place">Gallipoli</span> against an Allied invasion in <span class="date">1915</span>. The <span class="keyword">Battle of Gallipoli</span> was a disastrous campaign for the Allies (especially Australia and New Zealand), and Ataturk's brilliant defense made him famous throughout the Ottoman Empire.`
+    },
+    details:{
+      title:"Radical Transformation",
+      body:`After the Ottoman Empire collapsed following WWI, Ataturk led the <span class="keyword">Turkish War of Independence</span> and then did something extraordinary: he <strong>abolished both the sultanate and the caliphate</strong> — ending centuries of Ottoman and Islamic political authority.<br><br>In <span class="date">1923</span>, he founded the <span class="keyword">Republic of Turkey</span> as a <strong>secular</strong> (non-religious) state. His reforms were revolutionary:<br><br>He adopted the <strong>Latin alphabet</strong> to replace Arabic script. He granted <strong>women's suffrage</strong> (the right to vote). He imposed <strong>Western dress codes</strong>, banning the traditional fez hat. He moved the capital from <span class="place">Istanbul</span> to <span class="place">Ankara</span> to symbolize a break from the Ottoman past.<br><br>The Turkish parliament gave him the surname <span class="keyword">"Ataturk"</span> — meaning <strong>"Father of the Turks"</strong>.`
+    },
+    keyFacts:[
+      "Defended Gallipoli against Allied invasion in WWI (1915)",
+      "Founded the Republic of Turkey in 1923 — abolished the sultanate and caliphate",
+      "Adopted the Latin alphabet; granted women's suffrage",
+      "Moved capital from Istanbul to Ankara; imposed Western dress codes",
+      "Ataturk = 'Father of the Turks' — a surname given by parliament"
+    ],
+    bowlTip:`Key triggers: <em>"defended Gallipoli"</em>, <em>"abolished the caliphate"</em>, <em>"Latin alphabet in Turkey"</em>, <em>"moved capital to Ankara"</em>, <em>"Father of the Turks"</em>. Buzz: <strong>Mustafa Kemal Ataturk</strong>.`,
+    quiz:{
+      question:"Who defended Gallipoli in WWI, then founded the secular Republic of Turkey in 1923 and was called 'Father of the Turks'?",
+      choices:["Sultan Mehmed II","Suleiman the Magnificent","Mustafa Kemal Ataturk","Enver Pasha"],
+      correct:2,
+      explanation:"Mustafa Kemal Ataturk defended Gallipoli, abolished the Ottoman sultanate and caliphate, founded the Republic of Turkey in 1923, and introduced sweeping Western reforms."
+    }
+  }
+},
+// ─── Topic 17: Armenians ───
+{
+  id:"d1t17", name:"Armenians", era:"World Wars", icon:"🕯️",
+  accept:["Armenian Genocide"],
+  facts:[
+    "Raphael Lemkin coined the word 'genocide' partly inspired by the mass killings of this people.",
+    "The death marches through the Syrian desert to Deir ez-Zor killed hundreds of thousands.",
+    "An estimated 1.5 million members of this group were systematically killed by the Ottoman Empire.",
+    "Turkey still disputes the characterization of the 1915 events as genocide against this group.",
+    "This Christian ethnic group suffered mass killings by the Ottoman Empire during World War I."
+  ],
+  funFact:"The word 'genocide' was literally invented because of what happened to the Armenians. Lawyer Raphael Lemkin created the term in 1944, citing the Armenian massacres as a key example.",
+  lecture:{
+    intro:{
+      title:"The Armenian Genocide",
+      body:`During <span class="keyword">World War I</span>, one of history's most horrific events took place: the systematic killing of <span class="keyword">Armenians</span> by the <span class="keyword">Ottoman Empire</span> (modern-day Turkey). The <span class="person">Armenians</span> were a <strong>Christian ethnic group</strong> living within the mostly Muslim Ottoman Empire.<br><br>This event is so significant that it actually inspired the creation of a new word. Polish lawyer <span class="person">Raphael Lemkin</span> coined the term <span class="keyword">"genocide"</span> in <span class="date">1944</span>, partly inspired by what happened to the Armenians. Before Lemkin, there was no word for the deliberate destruction of an entire people.`
+    },
+    details:{
+      title:"Death Marches and Denial",
+      body:`Beginning in <span class="date">1915</span>, the Ottoman government began systematically deporting and killing Armenians. Men were often separated and executed. Women, children, and the elderly were forced on <span class="keyword">death marches</span> through the <span class="place">Syrian desert</span> toward <span class="place">Deir ez-Zor</span>, with little food or water. Many died of starvation, thirst, and exhaustion along the way.<br><br>An estimated <strong>1.5 million Armenians</strong> were killed. This represents one of the first modern genocides.<br><br>To this day, <span class="place">Turkey</span> officially disputes whether these events constitute a <span class="keyword">genocide</span>, arguing the deaths resulted from wartime conditions rather than a deliberate plan. This <strong>denial</strong> remains one of the most controversial topics in international relations. Most historians and many countries, however, have recognized it as genocide.`
+    },
+    keyFacts:[
+      "1.5 million Armenians killed by the Ottoman Empire during WWI",
+      "Raphael Lemkin coined the word 'genocide' inspired by Armenian massacres",
+      "Death marches through the Syrian desert toward Deir ez-Zor",
+      "Armenians were a Christian ethnic group within the Ottoman Empire",
+      "Turkey still officially disputes the genocide characterization"
+    ],
+    bowlTip:`Key triggers: <em>"Raphael Lemkin coined genocide"</em>, <em>"death marches to Deir ez-Zor"</em>, <em>"1.5 million killed by Ottomans"</em>, <em>"Christian ethnic group in Ottoman Empire"</em>. Buzz: <strong>Armenians</strong> (or Armenian Genocide).`,
+    quiz:{
+      question:"Raphael Lemkin coined the word 'genocide' partly inspired by the mass killings of which people by the Ottoman Empire?",
+      choices:["Kurds","Greeks","Armenians","Assyrians"],
+      correct:2,
+      explanation:"The Armenian Genocide of 1915 killed an estimated 1.5 million Armenians. Raphael Lemkin specifically cited these events when he created the word 'genocide' in 1944."
+    }
+  }
+},
+// ─── Topic 18: World War II ───
+{
+  id:"d1t18", name:"World War II", era:"World Wars", icon:"💣",
+  accept:["WWII","WW2","Second World War"],
+  facts:[
+    "Operation Overlord, the largest amphibious invasion in history, took place on June 6, 1944.",
+    "The Axis Powers of Germany, Italy, and Japan fought against the Allied Powers in this global conflict.",
+    "The Battle of Stalingrad marked the turning point on the Eastern Front of this war.",
+    "This conflict began with Germany's invasion of Poland on September 1, 1939.",
+    "This deadliest conflict in human history lasted from 1939 to 1945 and killed over 70 million people."
+  ],
+  funFact:"World War II killed over 70 million people — roughly 3% of the world's entire population at the time. It was the deadliest conflict in human history by a wide margin.",
+  lecture:{
+    intro:{
+      title:"World War II: The Deadliest Conflict",
+      body:`<span class="keyword">World War II</span> (<span class="date">1939-1945</span>) was the deadliest conflict in human history, killing over <strong>70 million people</strong>. It engulfed nearly every part of the world and fundamentally changed the global order.<br><br>The war began when <span class="place">Germany</span>, under <span class="person">Adolf Hitler</span>, invaded <span class="place">Poland</span> on <span class="date">September 1, 1939</span>. Britain and France declared war on Germany in response. The two sides were the <span class="keyword">Axis Powers</span> (Germany, Italy, Japan) and the <span class="keyword">Allied Powers</span> (Britain, France, the USSR, and later the United States).`
+    },
+    details:{
+      title:"Key Battles and Turning Points",
+      body:`The war had several crucial turning points:<br><br>The <span class="keyword">Battle of Stalingrad</span> (<span class="date">1942-1943</span>) was the bloodiest battle in history and marked the turning point on the <strong>Eastern Front</strong>. The German army was surrounded and destroyed, and from that point on, the Soviets pushed west toward Berlin.<br><br><span class="keyword">Operation Overlord</span> — better known as <strong>D-Day</strong> — took place on <span class="date">June 6, 1944</span>. It was the <strong>largest amphibious (sea-to-land) invasion in history</strong>, with over 150,000 Allied troops landing on the beaches of <span class="place">Normandy, France</span>. This opened a second front against Germany and began the liberation of Western Europe.<br><br>The war in Europe ended in <span class="date">May 1945</span> when Berlin fell to the Soviets. The Pacific War ended in <span class="date">August 1945</span> after the US dropped atomic bombs on Hiroshima and Nagasaki.`
+    },
+    keyFacts:[
+      "1939-1945 — deadliest conflict in history (70+ million killed)",
+      "Started with Germany's invasion of Poland (September 1, 1939)",
+      "Axis (Germany, Italy, Japan) vs. Allies (Britain, France, USSR, USA)",
+      "Battle of Stalingrad — turning point on the Eastern Front",
+      "Operation Overlord / D-Day (June 6, 1944) — largest amphibious invasion ever"
+    ],
+    bowlTip:`WWII questions are EVERYWHERE in History Bowl. Key triggers: <em>"invasion of Poland 1939"</em>, <em>"Operation Overlord / D-Day"</em>, <em>"Battle of Stalingrad"</em>, <em>"Axis vs. Allied"</em>, <em>"70 million killed"</em>. Also accept: WWII, WW2, Second World War.`,
+    quiz:{
+      question:"What was the code name for the Allied invasion of Normandy on June 6, 1944 — the largest amphibious invasion in history?",
+      choices:["Operation Barbarossa","Operation Overlord","Operation Market Garden","Operation Torch"],
+      correct:1,
+      explanation:"Operation Overlord (D-Day) was the Allied invasion of Normandy, France, on June 6, 1944. Over 150,000 troops landed on the beaches, beginning the liberation of Western Europe."
+    }
+  }
+},
+// ─── Topic 19: Hiroshima ───
+{
+  id:"d1t19", name:"Hiroshima", era:"World Wars", icon:"☢️",
+  accept:[],
+  facts:[
+    "The Enola Gay, a B-29 bomber piloted by Paul Tibbets, dropped the weapon on this city.",
+    "A uranium-based bomb called 'Little Boy' was used on this city on August 6, 1945.",
+    "The Genbaku Dome, now a UNESCO site, was one of the few structures left standing after the blast.",
+    "An estimated 80,000 people died instantly, with tens of thousands more dying from radiation effects.",
+    "This Japanese city was the first target of an atomic weapon, hastening the end of World War II."
+  ],
+  funFact:"The Genbaku Dome (Atomic Bomb Dome) in Hiroshima was one of the few buildings left partially standing near ground zero. Today it is a UNESCO World Heritage Site and a symbol of peace.",
+  lecture:{
+    intro:{
+      title:"Hiroshima: The Dawn of the Atomic Age",
+      body:`On the morning of <span class="date">August 6, 1945</span>, a single American B-29 bomber named the <span class="keyword">Enola Gay</span>, piloted by Colonel <span class="person">Paul Tibbets</span>, flew over the Japanese city of <span class="place">Hiroshima</span>. At 8:15 AM, it dropped a bomb called <span class="keyword">"Little Boy"</span> — the world's first <strong>atomic weapon</strong> used in warfare.<br><br>In an instant, the world changed forever. This was the beginning of the <span class="keyword">Atomic Age</span>.`
+    },
+    details:{
+      title:"Devastation and Legacy",
+      body:`The bomb was a <strong>uranium-based</strong> nuclear weapon. When it detonated about 600 meters above the city, it created a blinding flash, a massive fireball, and a shockwave that destroyed nearly everything within a mile radius.<br><br>An estimated <strong>80,000 people died instantly</strong>. Tens of thousands more died in the following weeks and months from burns, injuries, and <span class="keyword">radiation sickness</span> — a terrifying new way to die that no one understood yet. The total death toll eventually reached around <strong>140,000</strong> by the end of 1945.<br><br>One of the few structures left partially standing near ground zero was the <span class="keyword">Genbaku Dome</span> (Atomic Bomb Dome), which is now a <strong>UNESCO World Heritage Site</strong> and a powerful symbol of peace.<br><br>Three days later, a second bomb (<span class="keyword">"Fat Man"</span>) was dropped on <span class="place">Nagasaki</span>. Japan surrendered on <span class="date">August 15, 1945</span>, ending World War II.`
+    },
+    keyFacts:[
+      "August 6, 1945 — first atomic bomb used in warfare",
+      "Enola Gay (B-29 bomber) piloted by Paul Tibbets dropped 'Little Boy'",
+      "80,000 died instantly; ~140,000 total by end of 1945",
+      "Genbaku Dome — UNESCO World Heritage Site, symbol of peace",
+      "Hastened the end of WWII — Japan surrendered August 15, 1945"
+    ],
+    bowlTip:`Instant buzz triggers: <em>"Enola Gay"</em>, <em>"Little Boy"</em>, <em>"Paul Tibbets"</em>, <em>"Genbaku Dome"</em>, <em>"first atomic weapon used in warfare"</em>, <em>"August 6, 1945"</em>. Buzz: <strong>Hiroshima</strong>. Note: Nagasaki was the SECOND city (Fat Man bomb).`,
+    quiz:{
+      question:"What was the name of the B-29 bomber that dropped the first atomic bomb on Hiroshima?",
+      choices:["Memphis Belle","Enola Gay","Bockscar","Spirit of St. Louis"],
+      correct:1,
+      explanation:"The Enola Gay, piloted by Colonel Paul Tibbets, dropped 'Little Boy' on Hiroshima on August 6, 1945. Bockscar was the plane that dropped 'Fat Man' on Nagasaki three days later."
+    }
+  }
+}
+]
+};
+
+// ══════════════════════════════════════════════════════════════
+// DAY CONFIGURATION
+// ══════════════════════════════════════════════════════════════
+const DAY_CONFIG = [];
+for(let d=1;d<=21;d++){
+  const isReview = [6,12,18].includes(d);
+  const isFinal = d===21;
+  let topicCount = 20;
+  let label = `DAY ${d}`;
+  let reviewRange = '';
+  if(isReview){
+    label = `DAY ${d}`;
+    topicCount = 100;
+    const block = d/6;
+    reviewRange = `DAY ${(block-1)*5+1}-${block*5}`;
+  }
+  if(isFinal){
+    topicCount = 420;
+    reviewRange = 'ALL TOPICS';
+  }
+  DAY_CONFIG.push({day:d, label, isReview, isFinal, topicCount, reviewRange});
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+const SAVE_KEY = 'hb21';
+let state = loadState();
+
+function loadState(){
+  try{
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(s && s.version === 2) return s;
+  }catch(e){}
+  return {
+    version:2,
+    xp:0,
+    daysCompleted:{},  // {1:{lecture:true,flash:true,score:18}, ...}
+    topicsMastered:{},  // {"d1t0":true, ...}
+    currentDay:1
+  };
+}
+
+function saveState(){ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
+
+function isDayUnlocked(d){
+  if(d===1) return true;
+  // Previous day must have lecture completed (or be a review day that's done)
+  const prev = d-1;
+  return state.daysCompleted[prev] && state.daysCompleted[prev].lecture;
+}
+
+function isDayComplete(d){
+  return state.daysCompleted[d] && state.daysCompleted[d].lecture;
+}
+
+function addXP(amount){
+  state.xp += amount;
+  saveState();
+  const toast = document.getElementById('xpToast');
+  toast.textContent = `+${amount} XP`;
+  toast.style.display = 'block';
+  setTimeout(()=>toast.style.display='none', 1500);
+}
+
+// ══════════════════════════════════════════════════════════════
+// MAIN MENU
+// ══════════════════════════════════════════════════════════════
+function renderMenu(){
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  let daysCount = 0, topicsCount = 0;
+
+  for(const cfg of DAY_CONFIG){
+    const d = cfg.day;
+    const unlocked = isDayUnlocked(d);
+    const completed = isDayComplete(d);
+    if(completed) daysCount++;
+
+    const card = document.createElement('div');
+    card.className = 'day-card' + (!unlocked?' locked':'') + (completed?' completed':'') + (cfg.isReview?' review':'') + (cfg.isFinal?' final':'') + (unlocked && !completed?' current':'');
+
+    let typeHTML = '';
+    if(cfg.isReview) typeHTML = `<div class="day-type review-type">REVIEW</div>`;
+    else if(cfg.isFinal) typeHTML = `<div class="day-type final-type">FINAL EXAM</div>`;
+    else typeHTML = `<div class="day-type">Study</div>`;
+
+    let topicLabel = cfg.isReview ? cfg.reviewRange : cfg.isFinal ? 'All Topics' : `${cfg.topicCount} topics`;
+
+    let badge = '';
+    if(completed) badge = '<div class="day-badge done">&#10003;</div>';
+    else if(!unlocked) badge = '<div class="day-badge lock">&#128274;</div>';
+
+    card.innerHTML = `${badge}<div class="day-num">${d}</div>${typeHTML}<div class="day-topics">${topicLabel}</div>`;
+
+    if(unlocked){
+      card.onclick = () => openDay(d);
+    }
+    grid.appendChild(card);
+  }
+
+  // Count mastered topics
+  topicsCount = Object.keys(state.topicsMastered).length;
+
+  document.getElementById('stat-days').textContent = daysCount;
+  document.getElementById('stat-topics').textContent = topicsCount;
+  document.getElementById('stat-xp').textContent = state.xp;
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goMenu(){
+  showScreen('menu');
+  renderMenu();
+  // Stop any bowl timer
+  if(bowlTimerInterval) clearInterval(bowlTimerInterval);
+}
+
+// ══════════════════════════════════════════════════════════════
+// OPEN DAY
+// ══════════════════════════════════════════════════════════════
+let currentDayNum = 1;
+let currentTopicIdx = 0;
+let currentStepIdx = 0;
+let lectureTopics = [];
+let lectureCompleted = {}; // {topicIdx: true}
+let quizAnswered = {};
+
+function openDay(d){
+  currentDayNum = d;
+  const cfg = DAY_CONFIG[d-1];
+
+  if(cfg.isReview || cfg.isFinal){
+    showScreen('review');
+    document.getElementById('reviewTitle').textContent = cfg.isFinal ? 'FINAL EXAM' : `REVIEW: ${cfg.reviewRange}`;
+    return;
+  }
+
+  // Learning day
+  lectureTopics = DAY_TOPICS[d] || [];
+  if(lectureTopics.length === 0){
+    alert(`DAY ${d} content is not yet available. Only DAY 1 is implemented as a sample.`);
+    return;
+  }
+
+  currentTopicIdx = 0;
+  currentStepIdx = 0;
+  lectureCompleted = {};
+  quizAnswered = {};
+
+  // Check if lecture already done — offer choice
+  const dayData = state.daysCompleted[d] || {};
+  if(dayData.lecture){
+    // Phase 2 available
+    if(confirm('Lecture completed! Go to Flashcard Quiz (Phase 2)?\n\nOK = Flashcard Quiz\nCancel = Re-read Lecture')){
+      startFlashPhase(lectureTopics, `DAY ${d}: Flashcard Quiz`, `Phase 2 of Day ${d}`);
+      return;
+    }
+  }
+
+  showScreen('day');
+  document.getElementById('dayTitle').textContent = `DAY ${d}`;
+  document.getElementById('phaseLabel').textContent = `Phase 1: Lecture (${lectureTopics.length} topics)`;
+
+  renderTopicNav();
+  renderLecture();
+}
+
+function renderTopicNav(){
+  const nav = document.getElementById('topicNav');
+  nav.innerHTML = '';
+  lectureTopics.forEach((t,i)=>{
+    const dot = document.createElement('div');
+    dot.className = 'topic-dot' + (i===currentTopicIdx?' active':'') + (lectureCompleted[i]?' done':'');
+    dot.textContent = i+1;
+    dot.onclick = ()=>{ currentTopicIdx=i; currentStepIdx=0; renderLecture(); renderTopicNav(); };
+    nav.appendChild(dot);
+  });
+}
+
+function renderLecture(){
+  const topic = lectureTopics[currentTopicIdx];
+  if(!topic) return;
+  const lec = topic.lecture;
+  const totalSteps = 6; // intro, details, keyFacts, bowlTip, quiz, result
+
+  // Progress bar
+  const overall = Object.keys(lectureCompleted).length / lectureTopics.length * 100;
+  document.getElementById('dayProgress').style.width = overall + '%';
+
+  // Step indicators
+  const si = document.getElementById('stepIndicators');
+  si.innerHTML = '';
+  for(let s=0;s<totalSteps;s++){
+    const dot = document.createElement('div');
+    dot.className = 'step-ind' + (s===currentStepIdx?' active':'') + (s<currentStepIdx?' visited':'');
+    dot.onclick = ()=>{ currentStepIdx=s; renderLecture(); };
+    si.appendChild(dot);
+  }
+
+  // Content
+  const content = document.getElementById('lectureContent');
+  content.innerHTML = '';
+
+  const stepLabel = ['Introduction','Key Details','Key Facts','Bowl Tip','Mini Quiz','Result'][currentStepIdx];
+
+  if(currentStepIdx === 0){
+    content.innerHTML = `
+      <div class="lec-card highlight">
+        <div class="lec-step-label">Topic ${currentTopicIdx+1} of ${lectureTopics.length} &middot; Step 1 of 6 &middot; Introduction</div>
+        <div class="lec-heading"><span class="emoji">${topic.icon}</span> ${lec.intro.title}</div>
+        <div class="lec-text">${lec.intro.body}</div>
+      </div>`;
+  } else if(currentStepIdx === 1){
+    content.innerHTML = `
+      <div class="lec-card highlight">
+        <div class="lec-step-label">Topic ${currentTopicIdx+1} of ${lectureTopics.length} &middot; Step 2 of 6 &middot; Key Details</div>
+        <div class="lec-heading"><span class="emoji">📖</span> ${lec.details.title}</div>
+        <div class="lec-text">${lec.details.body}</div>
+      </div>`;
+  } else if(currentStepIdx === 2){
+    let kfHTML = lec.keyFacts.map(kf=>`<li>${kf}</li>`).join('');
+    content.innerHTML = `
+      <div class="lec-card highlight">
+        <div class="lec-step-label">Topic ${currentTopicIdx+1} of ${lectureTopics.length} &middot; Step 3 of 6 &middot; Key Facts</div>
+        <div class="lec-heading"><span class="emoji">🧠</span> Remember These!</div>
+        <ul class="lec-keypoints">${kfHTML}</ul>
+      </div>`;
+  } else if(currentStepIdx === 3){
+    content.innerHTML = `
+      <div class="lec-card highlight">
+        <div class="lec-step-label">Topic ${currentTopicIdx+1} of ${lectureTopics.length} &middot; Step 4 of 6 &middot; Bowl Tip</div>
+        <div class="lec-heading"><span class="emoji">🎯</span> Bowl Tip: When to Buzz</div>
+        <div class="lec-text">${lec.bowlTip}</div>
+      </div>`;
+  } else if(currentStepIdx === 4){
+    const q = lec.quiz;
+    const answered = quizAnswered[currentTopicIdx];
+    let choicesHTML = q.choices.map((c,i)=>{
+      let cls = 'quiz-choice';
+      if(answered !== undefined){
+        cls += ' disabled';
+        if(i===q.correct) cls += ' correct';
+        else if(i===answered && answered !== q.correct) cls += ' wrong';
+      }
+      return `<div class="${cls}" onclick="handleQuiz(${i})">${c}</div>`;
+    }).join('');
+
+    let resultHTML = '';
+    if(answered !== undefined){
+      const correct = answered === q.correct;
+      resultHTML = `<div class="quiz-result show ${correct?'pass':'fail'}">${correct?'Correct!':'Incorrect!'} ${q.explanation}</div>`;
+    }
+
+    content.innerHTML = `
+      <div class="lec-card">
+        <div class="lec-step-label">Topic ${currentTopicIdx+1} of ${lectureTopics.length} &middot; Step 5 of 6 &middot; Mini Quiz</div>
+        <div class="lec-heading"><span class="emoji">❓</span> Quick Check</div>
+        <div class="lec-text"><strong>Q:</strong> ${q.question}</div>
+      </div>
+      <div class="quiz-choices">${choicesHTML}</div>
+      ${resultHTML}`;
+  } else if(currentStepIdx === 5){
+    const answered = quizAnswered[currentTopicIdx];
+    const correct = answered === lectureTopics[currentTopicIdx].lecture.quiz.correct;
+    const xpEarned = correct ? 50 : 25;
+
+    if(!lectureCompleted[currentTopicIdx]){
+      lectureCompleted[currentTopicIdx] = true;
+      state.topicsMastered[topic.id] = true;
+      addXP(xpEarned);
+      checkLectureComplete();
+    }
+
+    let acceptHTML = topic.accept.length ? `<div style="color:var(--dim);font-size:.85rem;margin-top:4px">Also accept: ${topic.accept.join(', ')}</div>` : '';
+
+    content.innerHTML = `
+      <div class="summary-card">
+        <h3>${topic.icon} Topic Mastered: ${topic.name}</h3>
+        ${acceptHTML}
+        <div class="score">+${xpEarned} XP</div>
+      </div>
+      <div class="lec-card" style="margin-top:12px;border-color:var(--gold)">
+        <div class="lec-heading"><span class="emoji">💡</span> Fun Fact</div>
+        <div class="lec-text">${topic.funFact}</div>
+      </div>
+      ${currentTopicIdx < lectureTopics.length-1 ?
+        `<div style="text-align:center;margin-top:14px"><button class="btn btn-gold" onclick="nextTopic()">Next Topic &rarr;</button></div>` :
+        `<div style="text-align:center;margin-top:14px"><button class="btn btn-green" onclick="finishLecture()">Lecture Complete! &rarr; Flashcards</button></div>`
+      }`;
+
+    renderTopicNav();
+  }
+
+  // Update nav button states
+  document.getElementById('btnPrevStep').disabled = (currentStepIdx === 0 && currentTopicIdx === 0);
+}
+
+function handleQuiz(choiceIdx){
+  if(quizAnswered[currentTopicIdx] !== undefined) return;
+  quizAnswered[currentTopicIdx] = choiceIdx;
+  renderLecture();
+}
+
+function lecStep(dir){
+  const newStep = currentStepIdx + dir;
+  if(newStep < 0){
+    if(currentTopicIdx > 0){
+      currentTopicIdx--;
+      currentStepIdx = 5;
+      renderTopicNav();
+    }
+    renderLecture();
+    return;
+  }
+  if(newStep > 5){
+    if(currentTopicIdx < lectureTopics.length - 1){
+      currentTopicIdx++;
+      currentStepIdx = 0;
+      renderTopicNav();
+    }
+    renderLecture();
+    return;
+  }
+  // Skip to step 5 (result) only if quiz answered
+  if(newStep === 5 && quizAnswered[currentTopicIdx] === undefined){
+    currentStepIdx = 4; // stay on quiz
+    renderLecture();
+    return;
+  }
+  currentStepIdx = newStep;
+  renderLecture();
+}
+
+function nextTopic(){
+  currentTopicIdx++;
+  currentStepIdx = 0;
+  renderTopicNav();
+  renderLecture();
+  window.scrollTo(0,0);
+}
+
+function checkLectureComplete(){
+  if(Object.keys(lectureCompleted).length >= lectureTopics.length){
+    if(!state.daysCompleted[currentDayNum]) state.daysCompleted[currentDayNum] = {};
+    state.daysCompleted[currentDayNum].lecture = true;
+    saveState();
+  }
+}
+
+function finishLecture(){
+  if(!state.daysCompleted[currentDayNum]) state.daysCompleted[currentDayNum] = {};
+  state.daysCompleted[currentDayNum].lecture = true;
+  saveState();
+  startFlashPhase(lectureTopics, `DAY ${currentDayNum}: Flashcard Quiz`, `Phase 2 — Self-Assessment`);
+}
+
+// ══════════════════════════════════════════════════════════════
+// FLASHCARD PHASE
+// ══════════════════════════════════════════════════════════════
+let flashTopics = [];
+let flashOrder = [];
+let flashIdx = 0;
+let flashResults = []; // {topic, knew: bool}
+let flashFlipped = false;
+
+function startFlashPhase(topics, title, subtitle){
+  flashTopics = topics;
+  flashOrder = shuffle([...Array(topics.length).keys()]);
+  flashIdx = 0;
+  flashResults = [];
+  flashFlipped = false;
+
+  document.getElementById('flashTitle').textContent = title;
+  document.getElementById('flashSubtitle').textContent = subtitle;
+
+  showScreen('flash');
+  renderFlashcard();
+}
+
+function renderFlashcard(){
+  if(flashIdx >= flashOrder.length){
+    showFlashSummary();
+    return;
+  }
+
+  const topic = flashTopics[flashOrder[flashIdx]];
+  flashFlipped = false;
+  document.getElementById('flashcard').classList.remove('flipped');
+  document.getElementById('selfGrade').style.display = 'none';
+
+  document.getElementById('fcProgress').textContent = `Card ${flashIdx+1} of ${flashOrder.length}`;
+
+  // Front: hints (hardest first = fact[0] is hardest)
+  const front = document.getElementById('flashFront');
+  let hintsHTML = topic.facts.map((f,i)=>`<li><span class="num">${i+1}.</span> ${f}</li>`).join('');
+  front.innerHTML = `
+    <div class="flash-era">${topic.era}</div>
+    <div class="flash-icon">${topic.icon}</div>
+    <div class="flash-title">??? Mystery ???</div>
+    <ul class="flash-facts">${hintsHTML}</ul>
+    <div class="flash-hint">Tap to reveal answer</div>`;
+
+  // Back: answer
+  const back = document.getElementById('flashBack');
+  let acceptHTML = topic.accept.length ? `<div class="answer-alt">Also accept: ${topic.accept.join(', ')}</div>` : '';
+  back.innerHTML = `
+    <div class="flash-era" style="color:var(--green)">Answer Revealed</div>
+    <div class="answer-box">
+      <div class="answer-label">The Answer Is</div>
+      <div class="answer-text">${topic.icon} ${topic.name}</div>
+      ${acceptHTML}
+    </div>
+    <div class="fun-fact"><strong>Fun Fact:</strong> ${topic.funFact}</div>`;
+}
+
+function flipFlash(){
+  const fc = document.getElementById('flashcard');
+  fc.classList.toggle('flipped');
+  flashFlipped = !flashFlipped;
+  if(flashFlipped){
+    document.getElementById('selfGrade').style.display = 'flex';
+  } else {
+    document.getElementById('selfGrade').style.display = 'none';
+  }
+}
+
+function gradeFlash(knew){
+  const topic = flashTopics[flashOrder[flashIdx]];
+  flashResults.push({topic, knew});
+  flashIdx++;
+  renderFlashcard();
+}
+
+function showFlashSummary(){
+  const knew = flashResults.filter(r=>r.knew).length;
+  const total = flashResults.length;
+  const pct = Math.round(knew/total*100);
+  const xpEarned = knew * 10;
+
+  addXP(xpEarned);
+  if(!state.daysCompleted[currentDayNum]) state.daysCompleted[currentDayNum] = {};
+  state.daysCompleted[currentDayNum].flash = true;
+  state.daysCompleted[currentDayNum].score = knew;
+  saveState();
+
+  document.getElementById('fsSummaryTitle').textContent = `${pct >= 80 ? 'Excellent!' : pct >= 60 ? 'Good Job!' : 'Keep Studying!'}`;
+  document.getElementById('fsSummaryScore').textContent = `${knew}/${total} (${pct}%)`;
+
+  let listHTML = '<div class="review-list">';
+  flashResults.forEach(r=>{
+    listHTML += `<div class="review-item"><span>${r.topic.icon} ${r.topic.name}</span><span class="ri-status">${r.knew?'&#10003;':'&#10007;'}</span></div>`;
+  });
+  listHTML += '</div>';
+  if(flashResults.some(r=>!r.knew)){
+    listHTML += '<div style="text-align:center;margin-top:12px;color:var(--dim);font-size:.85rem">Review the topics marked with &#10007; to improve!</div>';
+  }
+  document.getElementById('fsSummaryList').innerHTML = listHTML;
+
+  showScreen('flash-summary');
+}
+
+// ══════════════════════════════════════════════════════════════
+// REVIEW DAY
+// ══════════════════════════════════════════════════════════════
+function startReviewFlash(){
+  // Gather all topics from previous days for review
+  const topics = getReviewTopics();
+  if(topics.length === 0){ alert('No topics available for review yet!'); return; }
+  startFlashPhase(topics, `Review: Flashcard Blitz`, `${topics.length} topics from previous days`);
+}
+
+function getReviewTopics(){
+  // For DAY 6: topics from DAY 1-5. Since only DAY 1 exists, use DAY 1.
+  let all = [];
+  for(let d=1; d<=5; d++){
+    if(DAY_TOPICS[d]) all = all.concat(DAY_TOPICS[d]);
+  }
+  if(all.length === 0 && DAY_TOPICS[1]) all = DAY_TOPICS[1]; // fallback
+  return all;
+}
+
+// ══════════════════════════════════════════════════════════════
+// BOWL SIMULATOR
+// ══════════════════════════════════════════════════════════════
+let bowlQuestions = [];
+let bowlIdx = 0;
+let bowlScore = 0;
+let bowlHintIdx = 0;
+let bowlTimerVal = 0;
+let bowlTimerInterval = null;
+let bowlAnswered = false;
+let bowlResults = [];
+
+const HINT_POINTS = [100, 80, 60, 40, 20];
+
+function startBowlSim(){
+  const topics = getReviewTopics();
+  if(topics.length === 0){ alert('No topics available!'); return; }
+
+  // Pick 25 random questions (or all if less)
+  const shuffled = shuffle([...topics]);
+  bowlQuestions = shuffled.slice(0, Math.min(25, shuffled.length));
+  bowlIdx = 0;
+  bowlScore = 0;
+  bowlResults = [];
+
+  showScreen('bowl');
+  loadBowlQuestion();
+}
+
+function loadBowlQuestion(){
+  if(bowlIdx >= bowlQuestions.length){
+    showBowlFinal();
+    return;
+  }
+
+  const q = bowlQuestions[bowlIdx];
+  bowlHintIdx = 0;
+  bowlAnswered = false;
+  bowlTimerVal = 30;
+
+  document.getElementById('bowlQnum').textContent = `Q ${bowlIdx+1}/${bowlQuestions.length}`;
+  document.getElementById('bowlScore').textContent = `${bowlScore} pts`;
+  document.getElementById('bowlTimer').textContent = bowlTimerVal;
+
+  // Build hints area
+  const hintsArea = document.getElementById('bowlHints');
+  hintsArea.innerHTML = `<div style="text-align:center;font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">${q.era}</div>`;
+  q.facts.forEach((f,i)=>{
+    hintsArea.innerHTML += `<div class="bowl-hint" id="bh-${i}"><span class="pts">[${HINT_POINTS[i]}pts]</span> ${f}</div>`;
+  });
+
+  // Show elements
+  document.getElementById('buzzBtn').style.display = 'block';
+  document.getElementById('buzzBtn').disabled = false;
+  document.getElementById('bowlInputArea').style.display = 'none';
+  document.getElementById('bowlResult').style.display = 'none';
+  document.getElementById('bowlNextBtn').style.display = 'none';
+
+  // Start revealing hints
+  revealHint(0);
+
+  // Timer
+  if(bowlTimerInterval) clearInterval(bowlTimerInterval);
+  bowlTimerInterval = setInterval(()=>{
+    bowlTimerVal--;
+    document.getElementById('bowlTimer').textContent = bowlTimerVal;
+
+    // Reveal hints over time
+    const elapsed = 30 - bowlTimerVal;
+    if(elapsed >= 6 && bowlHintIdx < 1) revealHint(1);
+    if(elapsed >= 12 && bowlHintIdx < 2) revealHint(2);
+    if(elapsed >= 18 && bowlHintIdx < 3) revealHint(3);
+    if(elapsed >= 24 && bowlHintIdx < 4) revealHint(4);
+
+    if(bowlTimerVal <= 0){
+      clearInterval(bowlTimerInterval);
+      if(!bowlAnswered) timeoutBowl();
+    }
+  }, 1000);
+}
+
+function revealHint(idx){
+  const el = document.getElementById('bh-'+idx);
+  if(el) el.classList.add('revealed');
+  bowlHintIdx = idx + 1;
+}
+
+function buzzIn(){
+  if(bowlAnswered) return;
+  clearInterval(bowlTimerInterval);
+  document.getElementById('buzzBtn').disabled = true;
+  document.getElementById('bowlInputArea').style.display = 'block';
+  document.getElementById('bowlInput').value = '';
+  document.getElementById('bowlInput').focus();
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Enter' && document.getElementById('screen-bowl').classList.contains('active')){
+    if(document.getElementById('bowlInputArea').style.display === 'block'){
+      submitBowlAnswer();
+    }
+  }
+});
+
+function submitBowlAnswer(){
+  const input = document.getElementById('bowlInput').value.trim();
+  if(!input) return;
+
+  const q = bowlQuestions[bowlIdx];
+  bowlAnswered = true;
+
+  // Fuzzy match
+  const correct = isAnswerCorrect(input, q.name, q.accept || []);
+  const points = correct ? HINT_POINTS[Math.min(bowlHintIdx-1, 4)] || 20 : 0;
+
+  if(correct){
+    bowlScore += points;
+    document.getElementById('bowlScore').textContent = `${bowlScore} pts`;
+  }
+
+  bowlResults.push({topic:q, correct, points, answer:input});
+
+  document.getElementById('bowlInputArea').style.display = 'none';
+  const res = document.getElementById('bowlResult');
+  res.style.display = 'block';
+
+  if(correct){
+    res.className = 'bowl-result correct-r';
+    res.innerHTML = `Correct! <strong>${q.name}</strong> (+${points} pts)`;
+  } else {
+    res.className = 'bowl-result wrong-r';
+    res.innerHTML = `Incorrect. The answer was <strong>${q.name}</strong>${q.accept.length ? ` (also: ${q.accept.join(', ')})` : ''}`;
+  }
+
+  // Reveal all hints
+  for(let i=0;i<5;i++) revealHint(i);
+
+  document.getElementById('buzzBtn').style.display = 'none';
+  document.getElementById('bowlNextBtn').style.display = 'inline-block';
+}
+
+function timeoutBowl(){
+  bowlAnswered = true;
+  const q = bowlQuestions[bowlIdx];
+  bowlResults.push({topic:q, correct:false, points:0, answer:'(time up)'});
+
+  document.getElementById('buzzBtn').style.display = 'none';
+  document.getElementById('bowlInputArea').style.display = 'none';
+
+  const res = document.getElementById('bowlResult');
+  res.style.display = 'block';
+  res.className = 'bowl-result wrong-r';
+  res.innerHTML = `Time's up! The answer was <strong>${q.name}</strong>`;
+
+  for(let i=0;i<5;i++) revealHint(i);
+  document.getElementById('bowlNextBtn').style.display = 'inline-block';
+}
+
+function nextBowlQ(){
+  bowlIdx++;
+  loadBowlQuestion();
+  window.scrollTo(0,0);
+}
+
+function isAnswerCorrect(input, name, accept){
+  const normalize = s => s.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const ni = normalize(input);
+  if(!ni) return false;
+
+  // Check main name
+  if(fuzzyMatch(ni, normalize(name))) return true;
+
+  // Check accepted alternatives
+  for(const a of accept){
+    if(fuzzyMatch(ni, normalize(a))) return true;
+  }
+
+  // Check if input contains the key part of the name
+  const nameParts = name.split(/[\s;,]+/).filter(p=>p.length>2);
+  for(const p of nameParts){
+    if(normalize(p).length > 3 && ni.includes(normalize(p))) return true;
+  }
+
+  return false;
+}
+
+function fuzzyMatch(a, b){
+  if(a === b) return true;
+  if(a.includes(b) || b.includes(a)) return true;
+  // Simple edit distance check for short strings
+  if(Math.abs(a.length - b.length) > 3) return false;
+  let dist = levenshtein(a, b);
+  return dist <= Math.max(1, Math.floor(b.length * 0.25));
+}
+
+function levenshtein(a,b){
+  const m=a.length, n=b.length;
+  const d=Array.from({length:m+1},()=>Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) d[i][0]=i;
+  for(let j=0;j<=n;j++) d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){
+    d[i][j]=Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+(a[i-1]!==b[j-1]?1:0));
+  }
+  return d[m][n];
+}
+
+function showBowlFinal(){
+  if(bowlTimerInterval) clearInterval(bowlTimerInterval);
+
+  const correct = bowlResults.filter(r=>r.correct).length;
+  const total = bowlResults.length;
+  const xpEarned = bowlScore;
+  addXP(xpEarned);
+
+  document.getElementById('bowlFinalScore').textContent = `${bowlScore} pts`;
+  document.getElementById('bowlFinalDetail').innerHTML = `${correct}/${total} correct &middot; +${xpEarned} XP`;
+
+  let listHTML = '';
+  bowlResults.forEach(r=>{
+    const icon = r.correct ? '<span style="color:var(--green)">&#10003;</span>' : '<span style="color:var(--red)">&#10007;</span>';
+    listHTML += `<div class="review-item"><span>${r.topic.icon} ${r.topic.name}</span><span>${icon} ${r.points}pts</span></div>`;
+  });
+  document.getElementById('bowlReviewList').innerHTML = listHTML;
+
+  showScreen('bowl-final');
+}
+
+function endBowl(){
+  if(bowlTimerInterval) clearInterval(bowlTimerInterval);
+  goMenu();
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+renderMenu();
+</script>
+</body>
+</html>
