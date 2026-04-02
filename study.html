@@ -141,9 +141,10 @@ font-size:14px;z-index:999;pointer-events:none;animation:fadeIn .3s ease;display
 
 /* ══════ FLASHCARD MODE ══════ */
 .flashcard-container{perspective:1000px;margin:0 auto;max-width:480px}
-.flashcard{width:100%;min-height:400px;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .6s}
-.flashcard.flipped{transform:rotateY(180deg)}
-.flash-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius);padding:20px;display:flex;flex-direction:column}
+.flashcard{width:100%;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .6s}
+.flashcard.flipped .flash-front{display:none}
+.flashcard:not(.flipped) .flash-back{display:none}
+.flash-face{backface-visibility:hidden;border-radius:var(--radius);padding:20px;display:flex;flex-direction:column}
 .flash-front{background:linear-gradient(145deg,#1a1a45,#12122e);border:2px solid var(--accent)}
 .flash-back{background:linear-gradient(145deg,#0d2a1a,#0a1a10);border:2px solid var(--green);transform:rotateY(180deg)}
 .flash-era{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px}
@@ -256,8 +257,26 @@ border-bottom:1px solid #1a1a3a;font-size:.85rem}
     <div class="stat-item"><div class="stat-val" id="stat-topics">0</div><div class="stat-label">Topics Learned</div></div>
     <div class="stat-item"><div class="stat-val" id="stat-xp">0</div><div class="stat-label">Total XP</div></div>
   </div>
+  <div style="text-align:center;margin:14px 0">
+    <button class="btn btn-small" style="border-color:var(--red);color:var(--red)" onclick="openWrongNotes()">&#x1F4D4; Wrong Notes (<span id="wrongCount">0</span>)</button>
+  </div>
   <div class="calendar-grid" id="calendarGrid"></div>
   <button class="reset-btn" onclick="if(confirm('Reset all progress?')){localStorage.removeItem('hb21');location.reload()}">Reset Progress</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCREEN: WRONG NOTES
+     ════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-wrong">
+  <div class="day-header">
+    <h2>&#x1F4D4; Wrong Notes</h2>
+    <div class="phase-label">Topics you got wrong in Mini Quiz</div>
+  </div>
+  <div id="wrongList" style="margin:16px 0"></div>
+  <div style="text-align:center;margin:16px 0">
+    <button class="btn btn-gold btn-small" id="wrongFlashBtn" style="display:none" onclick="startWrongFlash()">&#x1F3AF; Practice Wrong Notes (Flashcards)</button>
+  </div>
+  <button class="back-btn" onclick="goMenu()">Back</button>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════
@@ -1158,13 +1177,14 @@ let state = loadState();
 function loadState(){
   try{
     const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if(s && s.version === 2) return s;
+    if(s && s.version === 2){ if(!s.wrongNotes) s.wrongNotes = {}; return s; }
   }catch(e){}
   return {
     version:2,
     xp:0,
     daysCompleted:{},  // {1:{lecture:true,flash:true,score:18}, ...}
     topicsMastered:{},  // {"d1t0":true, ...}
+    wrongNotes:{},      // {topicId: {day, name, icon, era}}
     currentDay:1
   };
 }
@@ -1233,6 +1253,79 @@ function renderMenu(){
   document.getElementById('stat-days').textContent = daysCount;
   document.getElementById('stat-topics').textContent = topicsCount;
   document.getElementById('stat-xp').textContent = state.xp;
+
+  // Update wrong notes count
+  const wrongCount = state.wrongNotes ? Object.keys(state.wrongNotes).length : 0;
+  document.getElementById('wrongCount').textContent = wrongCount;
+}
+
+// ══════════════════════════════════════════════════════════════
+// WRONG NOTES
+// ══════════════════════════════════════════════════════════════
+function openWrongNotes(){
+  showScreen('wrong');
+  const list = document.getElementById('wrongList');
+  const notes = state.wrongNotes || {};
+  const ids = Object.keys(notes);
+
+  if(ids.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim)">No wrong answers yet! Keep studying.</div>';
+    document.getElementById('wrongFlashBtn').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('wrongFlashBtn').style.display = 'inline-block';
+
+  list.innerHTML = ids.map(id => {
+    const n = notes[id];
+    // find the full topic to show facts
+    let topicData = null;
+    for(const d in DAY_TOPICS){
+      const found = DAY_TOPICS[d].find(t => t.id == id);
+      if(found){ topicData = found; break; }
+    }
+    const factsHTML = topicData ? topicData.facts.map((f,i) =>
+      `<div style="padding:6px 10px;margin:3px 0;background:rgba(255,255,255,.03);border-radius:6px;font-size:.82rem;border-left:3px solid var(--accent)">${i+1}. ${f}</div>`
+    ).join('') : '';
+    const quizInfo = topicData && topicData.lecture ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(255,64,129,.06);border-radius:8px;font-size:.82rem;border-left:3px solid var(--red)"><strong>Quiz Q:</strong> ${topicData.lecture.quiz.question}<br><strong>Answer:</strong> ${topicData.lecture.quiz.choices[topicData.lecture.quiz.correct]}</div>` : '';
+
+    return `<div style="background:var(--card);border:2px solid var(--red);border-radius:12px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><span style="font-size:1.3rem">${n.icon}</span> <strong>${n.name}</strong></div>
+        <div style="font-size:.75rem;color:var(--dim)">DAY ${n.day} &middot; ${n.era}</div>
+      </div>
+      ${factsHTML}
+      ${quizInfo}
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-small" style="border-color:var(--green);color:var(--green)" onclick="removeWrongNote('${id}')">&#x2714; I've learned this</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removeWrongNote(id){
+  if(state.wrongNotes && state.wrongNotes[id]){
+    delete state.wrongNotes[id];
+    saveState();
+    openWrongNotes();
+  }
+}
+
+function startWrongFlash(){
+  const notes = state.wrongNotes || {};
+  const ids = Object.keys(notes);
+  if(ids.length === 0) return;
+
+  // Find full topic data for each wrong note
+  const topics = [];
+  for(const id of ids){
+    for(const d in DAY_TOPICS){
+      const found = DAY_TOPICS[d].find(t => t.id == id);
+      if(found){ topics.push(found); break; }
+    }
+  }
+  if(topics.length === 0) return;
+  startFlashPhase(topics, 'Wrong Notes Review', `${topics.length} topics to review`);
 }
 
 function showScreen(id){
@@ -1283,11 +1376,15 @@ function openDay(d){
   // Check if lecture already done — offer choice
   const dayData = state.daysCompleted[d] || {};
   if(dayData.lecture){
-    // Phase 2 available
-    if(confirm('Lecture completed! Go to Flashcard Quiz (Phase 2)?\n\nOK = Flashcard Quiz\nCancel = Re-read Lecture')){
+    const choice = prompt('This day is completed! Choose:\n\n1 = Re-study Lecture\n2 = Flashcard Quiz\n3 = Wrong Notes Only\n\nType 1, 2, or 3:', '2');
+    if(choice === '2'){
       startFlashPhase(lectureTopics, `DAY ${d}: Flashcard Quiz`, `Phase 2 of Day ${d}`);
       return;
+    } else if(choice === '3'){
+      openWrongNotes();
+      return;
     }
+    // choice === '1' or anything else: fall through to re-read lecture
   }
 
   showScreen('day');
@@ -1431,6 +1528,20 @@ function renderLecture(){
 function handleQuiz(choiceIdx){
   if(quizAnswered[currentTopicIdx] !== undefined) return;
   quizAnswered[currentTopicIdx] = choiceIdx;
+  // Track wrong answers
+  const topic = lectureTopics[currentTopicIdx];
+  const correct = choiceIdx === topic.lecture.quiz.correct;
+  if(!correct){
+    if(!state.wrongNotes) state.wrongNotes = {};
+    state.wrongNotes[topic.id] = { day: currentDayNum, name: topic.name, icon: topic.icon, era: topic.era };
+    saveState();
+  } else {
+    // If they got it right, remove from wrong notes if previously wrong
+    if(state.wrongNotes && state.wrongNotes[topic.id]){
+      delete state.wrongNotes[topic.id];
+      saveState();
+    }
+  }
   renderLecture();
 }
 
