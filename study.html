@@ -141,10 +141,9 @@ font-size:14px;z-index:999;pointer-events:none;animation:fadeIn .3s ease;display
 
 /* ══════ FLASHCARD MODE ══════ */
 .flashcard-container{perspective:1000px;margin:0 auto;max-width:480px}
-.flashcard{width:100%;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .6s}
-.flashcard.flipped .flash-front{display:none}
-.flashcard:not(.flipped) .flash-back{display:none}
-.flash-face{backface-visibility:hidden;border-radius:var(--radius);padding:20px;display:flex;flex-direction:column}
+.flashcard{width:100%;max-width:480px;margin:0 auto}
+.flash-face{border-radius:var(--radius);padding:20px;display:flex;flex-direction:column}
+.flash-face.hidden{display:none !important}
 .flash-front{background:linear-gradient(145deg,#1a1a45,#12122e);border:2px solid var(--accent)}
 .flash-back{background:linear-gradient(145deg,#0d2a1a,#0a1a10);border:2px solid var(--green);transform:rotateY(180deg)}
 .flash-era{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px}
@@ -308,9 +307,9 @@ border-bottom:1px solid #1a1a3a;font-size:.85rem}
   </div>
   <div class="fc-progress" id="fcProgress"></div>
   <div class="flashcard-container">
-    <div class="flashcard" id="flashcard" onclick="flipFlash()">
+    <div class="flashcard" id="flashcard">
       <div class="flash-face flash-front" id="flashFront"></div>
-      <div class="flash-face flash-back" id="flashBack"></div>
+      <div class="flash-face flash-back hidden" id="flashBack"></div>
     </div>
   </div>
   <div class="self-grade" id="selfGrade" style="display:none">
@@ -1629,7 +1628,8 @@ function renderFlashcard(){
 
   const topic = flashTopics[flashOrder[flashIdx]];
   flashFlipped = false;
-  document.getElementById('flashcard').classList.remove('flipped');
+  document.getElementById('flashFront').classList.remove('hidden');
+  document.getElementById('flashBack').classList.add('hidden');
   document.getElementById('selfGrade').style.display = 'none';
 
   document.getElementById('fcProgress').textContent = `Card ${flashIdx+1} of ${flashOrder.length}`;
@@ -1658,14 +1658,10 @@ function renderFlashcard(){
 }
 
 function flipFlash(){
-  const fc = document.getElementById('flashcard');
-  fc.classList.toggle('flipped');
   flashFlipped = !flashFlipped;
-  if(flashFlipped){
-    document.getElementById('selfGrade').style.display = 'flex';
-  } else {
-    document.getElementById('selfGrade').style.display = 'none';
-  }
+  document.getElementById('flashFront').classList.toggle('hidden', flashFlipped);
+  document.getElementById('flashBack').classList.toggle('hidden', !flashFlipped);
+  document.getElementById('selfGrade').style.display = flashFlipped ? 'flex' : 'none';
 }
 
 function gradeFlash(knew){
