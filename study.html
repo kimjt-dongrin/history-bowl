@@ -371,9 +371,12 @@ border-bottom:1px solid #1a1a3a;font-size:.85rem}
   <div class="bowl-hint-area" id="bowlHints"></div>
   <button class="buzz-btn" id="buzzBtn" onclick="buzzIn()">BUZZ IN!</button>
   <div class="bowl-input-area" id="bowlInputArea">
-    <input type="text" class="bowl-input" id="bowlInput" placeholder="Type your answer..." autocomplete="off">
-    <br>
-    <button class="bowl-submit" onclick="submitBowlAnswer()">Submit</button>
+    <input type="text" class="bowl-input" id="bowlInput" placeholder="Type or speak your answer..." autocomplete="off">
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+      <button class="bowl-submit" onclick="submitBowlAnswer()">Submit</button>
+      <button class="bowl-submit" id="micBtn" onclick="startVoice()" style="background:var(--accent)">&#x1F3A4; Voice</button>
+    </div>
+    <div id="voiceStatus" style="text-align:center;font-size:12px;color:var(--accent);margin-top:6px;display:none"></div>
   </div>
   <div class="bowl-result" id="bowlResult"></div>
   <div style="text-align:center;margin-top:10px">
@@ -1821,6 +1824,65 @@ function buzzIn(){
   document.getElementById('bowlInputArea').style.display = 'block';
   document.getElementById('bowlInput').value = '';
   document.getElementById('bowlInput').focus();
+  // Show mic button only if browser supports speech recognition
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  document.getElementById('micBtn').style.display = SpeechRec ? 'inline-block' : 'none';
+  document.getElementById('voiceStatus').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+// VOICE RECOGNITION
+// ══════════════════════════════════════════════════════════════
+let recognition = null;
+
+function startVoice(){
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){ alert('Your browser does not support speech recognition. Use Chrome or Edge.'); return; }
+
+  if(recognition){ recognition.abort(); recognition = null; }
+
+  recognition = new SpeechRec();
+  recognition.lang = 'en-US';
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 3;
+  recognition.continuous = false;
+
+  const status = document.getElementById('voiceStatus');
+  const input = document.getElementById('bowlInput');
+  const micBtn = document.getElementById('micBtn');
+
+  micBtn.style.background = 'var(--red)';
+  micBtn.innerHTML = '&#x1F534; Listening...';
+  status.style.display = 'block';
+  status.textContent = 'Speak now...';
+
+  recognition.onresult = function(e){
+    let final = '', interim = '';
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      const t = e.results[i][0].transcript;
+      if(e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    input.value = final || interim;
+    status.textContent = final ? 'Got it! Press Submit or speak again.' : 'Hearing: ' + interim;
+    if(final){
+      micBtn.style.background = 'var(--accent)';
+      micBtn.innerHTML = '&#x1F3A4; Voice';
+    }
+  };
+
+  recognition.onerror = function(e){
+    status.textContent = e.error === 'no-speech' ? 'No speech detected. Try again.' : 'Error: ' + e.error;
+    micBtn.style.background = 'var(--accent)';
+    micBtn.innerHTML = '&#x1F3A4; Voice';
+  };
+
+  recognition.onend = function(){
+    micBtn.style.background = 'var(--accent)';
+    micBtn.innerHTML = '&#x1F3A4; Voice';
+  };
+
+  recognition.start();
 }
 
 document.addEventListener('keydown', e=>{
