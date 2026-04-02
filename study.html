@@ -1192,7 +1192,15 @@ function saveState(){ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
 
 function isDayUnlocked(d){
   if(d===1) return true;
-  // Previous day must have lecture completed (or be a review day that's done)
+  // Review/Final days: unlock if ANY previous learning day is completed
+  const cfg = DAY_CONFIG[d-1];
+  if(cfg && (cfg.isReview || cfg.isFinal)){
+    for(let i=1; i<d; i++){
+      if(state.daysCompleted[i] && state.daysCompleted[i].lecture) return true;
+    }
+    return false;
+  }
+  // Regular days: previous day must be completed
   const prev = d-1;
   return state.daysCompleted[prev] && state.daysCompleted[prev].lecture;
 }
